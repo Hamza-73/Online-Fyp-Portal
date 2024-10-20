@@ -1,0 +1,30 @@
+
+
+:root {
+    /* --main-blue-color--: #2f587b */
+    --main-blue-color: 47, 88, 123;
+    /* --main-red-color: #aa0000; */
+    --main-red-color: 170, 0, 0;
+    /* --main-yellow-color: #ffb400; */
+    --main-yellow-color: 255, 180, 0;
+
+    --transition-time--: .5s all ease;
+}
+
+
+.nav-item {
+    color: rgb(var(--main-blue-color));
+    transition: var(--transition-time--);
+}
+
+.nav-item:hover {
+    color: rgb(var(--main-red-color));
+}
+
+.active {
+    color: rgb(var(--main-red-color));
+}
+
+.nav-logo{
+    width: 110px;
+}
