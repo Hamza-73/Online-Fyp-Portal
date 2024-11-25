@@ -44,9 +44,11 @@ app.use("/", express.static("uploads"));
 const adminRoutes = require('./routes/admin.route.js');
 const studentRoutes = require('./routes/student.route.js');
 const authRoutes = require('./routes/auth.route.js');
+const supervisorRoutes = require('./routes/supervisor.route.js');
 app.use('/admin', adminRoutes);
 app.use('/auth', authRoutes);
 app.use('/student', studentRoutes);
+app.use('/supervisor', supervisorRoutes);
 
 
 // Start the server on the specified port

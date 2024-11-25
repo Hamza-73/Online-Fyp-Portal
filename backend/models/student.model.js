@@ -7,31 +7,31 @@ const studentSchema = new Schema({
     name: {
         type: String,
         required: true,
-        minlength: 3, // Minimum length of 3 characters
+        minlength: 3,
     },
     rollNo: {
         type: String,
         required: true,
         unique: true,
-        match: /^\d{4}(-RE-R)?(-R)?-BSCS-\d{2}$/, // Updated regex for roll number format
-    },  
+        match: /^\d{4}(-RE-R)?(-R)?-BSCS-\d{2}$/,
+    },
     email: {
         type: String,
         unique: true,
         validate: {
-            validator: (email) => validator.isEmail(email), // Validates if it's a valid email
+            validator: (email) => validator.isEmail(email),
             message: 'Invalid email format',
         },
     },
     father: {
         type: String,
         required: true,
-        minlength: 3, // Minimum length of 3 characters
+        minlength: 3,
     },
     batch: {
         type: String,
         required: true,
-        match: /^\d{4}-\d{4}$/, // Ensures batch follows the XXXX-XXXX format
+        match: /^\d{4}-\d{4}$/,
         message: 'Batch must be in the format XXXX-XXXX',
     },
     semester: {
@@ -43,7 +43,7 @@ const studentSchema = new Schema({
         required: true,
         unique: true,
         validate: {
-            validator: (cnic) => /^\d{13}$/.test(cnic.toString()), // Ensures it's 13 digits
+            validator: (cnic) => /^\d{13}$/.test(cnic.toString()),
             message: 'CNIC must be exactly 13 digits',
         },
     },
@@ -55,27 +55,19 @@ const studentSchema = new Schema({
         type: String,
         required: true,
     },
-    seenNotifications: {
-        type: Array,
-        default: []
+    notifications: {
+        seen: { type: Array, default: [] },
+        unseen: { type: Array, default: [] }
     },
-    unseenNotifications: {
-        type: Array,
-        default: []
-    },
-
-    // supervisor: { type: Schema.Types.ObjectId, ref: 'Supervisor' }, // Reference to the Supervisor model
-
-    // group: { type: Schema.Types.ObjectId, ref: 'Group' },
-
+    supervisor: { type: Schema.Types.ObjectId, ref: 'Supervisor' },
+    group: { type: Schema.Types.ObjectId, ref: 'Group' },
+    projectRequests: [{ type: Schema.Types.ObjectId, ref: 'ProjectRequest' }],
     marks: {
         externalMarks: { type: Number, default: 0 },
         internalMarks: { type: Number, default: 0 },
         hodMarks: { type: Number, default: 0 },
     },
-    // isMember: { type: Boolean, default: false },
-
-    // Separate fields for different deadlines and submission dates
+    isGroupMember: { type: Boolean, default: false },
     deadlines: {
         proposalSubmission: { type: Date },
         documentationSubmission: { type: Date },
@@ -86,19 +78,17 @@ const studentSchema = new Schema({
         documentationSubmitted: { type: Date },
         projectSubmitted: { type: Date },
     },
-
-    // viva: { type: Schema.Types.ObjectId, ref: 'Viva' },
-
-    requests: { type: Array, default: [] },
-    // pendingRequests: [{ type: Schema.Types.ObjectId, ref: 'Supervisor' }],
-    // rejectedRequest: [{ type: Schema.Types.ObjectId, ref: 'Supervisor' }]
+    requests: {
+        receivedRequests: { type: Array, default: [] }, // Fixed typo here
+        pendingRequests: [{ type: Schema.Types.ObjectId, ref: 'Supervisor', default: [] }],
+        rejectedRequests: [{ type: Schema.Types.ObjectId, ref: 'Supervisor', default: [] }]
+    },
 });
 
 // Pre-save hook to hash the password before saving
 studentSchema.pre('save', async function (next) {
     if (this.isModified('password')) {
         try {
-            // Generate salt and hash the password
             const salt = await bcrypt.genSalt(10);
             this.password = await bcrypt.hash(this.password, salt);
             next();
@@ -106,7 +96,7 @@ studentSchema.pre('save', async function (next) {
             next(error);
         }
     } else {
-        next(); // Continue if password is not modified
+        next();
     }
 });
 

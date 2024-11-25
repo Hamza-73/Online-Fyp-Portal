@@ -1,7 +1,10 @@
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const Student = require('../models/student.model.js');
+const Supervisor = require('../models/supervisor.model.js');
 const Admin = require('../models/admin.model.js'); // Assuming you have a User model
+const Project = require('../models/project.model.js');
+const Group = require('../models/group.model.js');
 
 module.exports.getStudents = async (req, res) => {
     try {
@@ -11,6 +14,28 @@ module.exports.getStudents = async (req, res) => {
 
     }
 }
+
+module.exports.profile = async (req, res) => {
+    try {
+        // Assuming `req.user` contains the decoded token data, including the admin ID
+        const id = req.user.id;  // Extract the user ID from the token
+
+        // Fetch the admin profile based on the ID from the token
+        const studentData = await Student.findById(id);
+
+        if (!studentData) {
+            return res.status(404).json({ message: 'Student not found', success: false });
+        }
+
+        const student = { ...studentData._doc };
+        delete student.password;
+
+        return res.json({ message: 'Student Profile', success: true, student });
+    } catch (error) {
+        console.error('Error fetching student profile:', error);
+        return res.status(500).json({ message: 'Server error', success: false });
+    }
+};
 
 module.exports.getProfile = async (req, res) => {
     try {
@@ -124,8 +149,247 @@ module.exports.editStudentProfile = [
 
         } catch (err) {
             console.error('Error updating student profile:', err);
-            res.status(500).json({ message: 'Internal server error' });
+            res.status(500).json({ success: false, message: 'Internal server error' });
         }
     }
 ];
 
+module.exports.deleteStudent = async (req, res) => {
+    try {
+        const { id } = req.params; // Destructure id from req.params
+        const adminId = req.user.id;
+        const student = await Student.findById(id);
+
+        const admin = await Admin.findById(adminId);
+
+        if (!admin) {
+            return res.status(401).json({ message: 'Unauthorized', success: false });
+        }
+
+        // Check if the admin is a super admin
+        if (!admin.superAdmin || !admin.write_permission) {
+            return res.status(403).json({ message: 'Super admin cannot be deleted', success: false });
+        }
+
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found', success: false });
+        }
+
+
+        // Proceed to delete if found and not a super admin
+        await Student.findByIdAndDelete(id);
+        return res.json({ message: 'Student deleted successfully', success: true });
+
+    } catch (error) {
+        console.error('Error deleting student:', error);
+        return res.status(500).json({ message: 'Server error', success: false });
+    }
+};
+
+module.exports.sendProjectRequest = async (req, res) => {
+    const { projectTitle, description, scope } = req.body;
+    const { supervisorId } = req.params;
+
+    try {
+        const student = await Student.findById(req.user.id);
+        if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
+
+        // Ensure requests is an object
+        if (!student.requests || typeof student.requests !== 'object') {
+            student.requests = {
+                receivedRequests: [],
+                pendingRequests: [],
+                rejectedRequests: []
+            };
+        }
+
+        if (student.isGroupMember) {
+            return res.status(500).json({ success: false, message: 'You are already in a group' });
+        }
+
+        //check the limit of requests send
+        if (student.requests.pendingRequests.length >= 2) {
+            return res.status(500).json({ success: false, message: "You can only send request to 2 supervisors at a time" });
+        }
+
+        const supervisor = await Supervisor.findById(supervisorId);
+        if (!supervisor) return res.status(404).json({ success: false, message: 'Supervisor not found' });
+        if (supervisor.slots <= 0) return res.status(500).json({ success: false, message: 'Supervisor slots are full' });
+
+        // check if supervisor has already rejected request
+        if (student.requests.rejectedRequests.some(req => req.equals(supervisor._id))) {
+            return res.status(500).json({ success: false, message: "You cannot send a request to this supervisor as he rejected your request before." });
+        }
+
+        if (student.requests.pendingRequests.some(req => req.equals(supervisor._id))) {
+            return res.status(400).json({ success: false, message: 'Request already sent to this supervisor' });
+        }
+
+        const existingProject = await Project.findOne({ projectTitle });
+        if (existingProject) {
+            return res.status(500).json({ success: false, message: "Request with this project Title already exists" });
+        }
+
+        //push student id in students array
+        const students = [];
+        students.push(req.user.id)
+
+        const projectRequest = new Project({ title: projectTitle, description, students, scope, status: 'pending' });
+        student.requests.pendingRequests.push(supervisor._id);
+        student.notifications.unseen.push({ type: "Important", message: `Project request sent to ${supervisor.name}` });
+        console.log("prohect id is ", projectRequest._id)
+        supervisor.projectRequest.push({
+            isAccepted: false,
+            project: projectRequest._id,
+            student: req.user.id,
+            createdAt: Date.now()
+        });
+        supervisor.notifications.unseen.push({ type: "Important", message: `A new proposal for ${projectTitle}` });
+
+        await Promise.all([student.save(), supervisor.save(), projectRequest.save()]);
+
+        return res.json({ success: true, message: `Project request sent to ${supervisor.name}` });
+
+    } catch (err) {
+        console.error('Error sending request:', err);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+module.exports.requestToJoinGroup = async (req, res) => {
+    const { groupId } = req.params;
+
+    try {
+        // Find the student making the request
+        const student = await Student.findById(req.user.id);
+        if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
+
+        if (student.isGroupMember) {
+            return res.status(400).json({ success: false, message: "You're already in a Group" });
+        }
+
+        if(student.requests.pendingRequests.length>=2){
+            return res.status(400).json({ success: false, message: `You can only send to 2 supervisors at a time`})
+        }
+
+        // Find the group and its supervisor
+        const group = await Group.findById(groupId);
+        if (!group) return res.status(404).json({ success: false, message: 'Group not found' });
+
+        const supervisor = await Supervisor.findById(group.supervisor);
+        if (!supervisor) return res.status(404).json({ success: false, message: 'Supervisor not found' });
+
+        // Check if the supervisor has previously rejected the student
+        if (student.requests.rejectedRequests.some(request => request.equals(supervisor._id))) {
+            return res.status(400).json({ success: false, message: "You cannot send a request to this supervisor as they rejected your request before." });
+        }
+
+        // Check if the group is already filled
+        if (group.students.length >= 3) {
+            return res.status(400).json({ success: false, message: 'The Group is already filled' });
+        }
+
+        // Check if the student has already sent a request to this supervisor
+        if (student.requests.pendingRequests.some(request => request.equals(supervisor._id))) {
+            return res.status(400).json({ success: false, message: "You've already sent a request to this supervisor" });
+        }
+
+        // Add notifications and update pending requests
+        const notificationMessage = `${student.name} has requested to join the group: ${group.title}`;
+        supervisor.notifications.unseen.push({ type: 'Important', message: notificationMessage });
+        supervisor.projectRequest.push({ project: group.project, student: student._id });
+
+        student.requests.pendingRequests.push(supervisor._id);
+        student.notifications.unseen.push({ 
+            type: 'Important', 
+            message: `You've sent a request to ${supervisor.name} to join the group: ${group.title}` 
+        });
+
+        // Save changes
+        await Promise.all([supervisor.save(), student.save()]);
+
+        res.json({ success: true, message: `Request sent to ${supervisor.name} for ${group.title}` });
+    } catch (err) {
+        console.error('Error sending join request:', err);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+module.exports.getSupervisorDetail = async (req, res) => {
+    try {
+        const { supervisorId } = req.params;
+
+        // Find the supervisor and populate groups and students
+        const supervisor = await Supervisor.findById(supervisorId)
+            .select('name designation department slots groups') // Select only groups field
+            .populate({
+                path: 'groups', // Populate the groups field
+                select: 'title', // Select only the title of the group
+                populate: {
+                    path: 'students', // Nested population for students
+                    select: 'name batch rollNo', // Select required student fields
+                },
+            });
+
+        // If supervisor is not found, return 404
+        if (!supervisor) {
+            return res.status(404).json({ success: false, message: 'Supervisor not found' });
+        }
+
+        // Map the groups to include only the desired data
+        const groups = supervisor.groups.map(group => ({
+            title: group.title,
+            students: group.students.map(student => ({
+                name: student.name,
+                batch: student.batch,
+                rollNo: student.rollNo,
+            })),
+        }));
+
+        return res.status(200).json({
+            success: true,
+            supervisor,
+            groups, // Respond with only group titles and student details
+        });
+    } catch (error) {
+        console.error('Error fetching supervisor details:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+        });
+    }
+}; 
+
+module.exports.myGroup = async (req, res) => {
+    try {
+        // Ensure req.user is not null or undefined before accessing req.user.id
+        if (!req.user || !req.user.id) {
+            return res.status(400).json({ success: false, message: 'User not authenticated' });
+        }
+
+        // Find the student by ID, populate the group and all referenced fields (supervisor, project, students)
+        const student = await Student.findById(req.user.id).populate({
+            path: 'group', // Populate the group field
+            populate: [
+                { path: 'supervisor', select: 'name email department designation slots' }, // Populate supervisor details
+                { path: 'project', select: 'title description scope' }, // Populate project details
+                { path: 'students', select: 'name email rollNo batch semester department' }, // Populate student details (if needed)
+            ]
+        });
+
+        // console.log("group is ", student.group);
+
+        // Return the group data if found
+        if (!student || !student.group) {
+            return res.status(404).json({ success: false, message: 'Group not found' });
+        }
+
+        res.json({ success: true, group: student.group });
+    } catch (error) {
+        // Log the error message for debugging
+        console.error('Error retrieving group:', error);
+
+        // Send a generic server error message to the client
+        res.status(500).json({ success: false, message: 'Server error, try refreshing or logging in again' });
+    }
+};

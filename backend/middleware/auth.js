@@ -6,7 +6,8 @@ dotenv.config({ path: path.join(__dirname, '..', 'config', '.env') });
 const authenticateToken = (req, res, next) => {
     try {
         // Check if the token cookie exists
-        const token = req.cookies.token;
+        const token = JSON.parse(req.cookies.auth).token;
+        // console.log("token is ", token)
 
         if (!token) {
             return res.status(401).json({ message: 'Authentication token missing', success: false });
@@ -21,7 +22,7 @@ const authenticateToken = (req, res, next) => {
         // Proceed to the next middleware or route handler
         next();
     } catch (error) {
-        console.error('Token verification failed:', error);
+        console.error('Token verification failed:', error.message);
         return res.status(403).json({ message: 'Invalid token', success: false });
     }
 };

@@ -5,38 +5,42 @@ import Login from '../Login';
 import Dashboard from '../Dashboard';
 import AdminList from './AdminList';
 import AdminProfile from './AdminProfile';
-import EditAdminProfile from './EditAdminProfile.jsx';
-import EditStudentProfile from './EditStudentProfile.jsx';
-import { AdminContext } from '../../context/AdminApis.jsx'; // Import the getProfile function
-import StudentList from './StudentList.jsx';
+import EditAdminProfile from './EditAdminProfile';
+import EditStudentProfile from './EditStudentProfile';
+import { AdminContext } from '../../context/AdminApis';
+import StudentList from './StudentList';
+import SupervisorList from './SupervisorList';
+import EditSupervisorProfile from './EditSupervisorProfile';
+import '../../index.css'
 
 export default function Admin() {
-
-  const { getProfile } = useContext(AdminContext); // Use the context
+  const { getProfile } = useContext(AdminContext);
 
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
   const fetchUserProfile = useCallback(async () => {
     try {
       const profileData = await getProfile();
-      setUserData(profileData.admin); // Set userData from profileData
-      console.log('profiledata is in ', profileData.admin)
+      setUserData(profileData.admin);
     } catch (error) {
       console.error('Error fetching profile:', error);
-      setUserData(null); // Handle error by setting userData to null
+      setUserData(null);
     }
     setLoading(false);
-  }, []);
+  }, [getProfile]);
 
   useEffect(() => {
-    fetchUserProfile(); // Call fetchUserProfile on component mount
+    fetchUserProfile();
   }, [fetchUserProfile]);
 
   const handleLogout = useCallback(() => {
-    setUserData(null); // Clear userData on logout
+    setUserData(null);
   }, []);
+
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   const pathsWithoutSidebar = ['/', '/admin/login'];
   const showSidebar = !pathsWithoutSidebar.includes(location.pathname);
@@ -46,47 +50,107 @@ export default function Admin() {
   }
 
   return (
-    <>
+    <div
+      className={`relative top-[60px] transition-all duration-300 ${
+        isSidebarOpen ? 'lg:ml-[250px]' : 'ml-0'
+      }`}
+    >
       {showSidebar && userData && (
-        <AdminNav 
-          userData={userData} 
+        <AdminNav
+          userData={userData}
           onLogout={handleLogout}
+          isSidebarOpen={isSidebarOpen}
+          toggleSidebar={toggleSidebar}
         />
       )}
       <Routes>
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
-            userData 
-              ? <Navigate to="/admin/dashboard" replace /> 
-              : <Login user="admin" onLogin={fetchUserProfile} />
-          } 
+            userData ? (
+              <Navigate to="/admin/dashboard" replace />
+            ) : (
+              <Login user="admin" onLogin={fetchUserProfile} />
+            )
+          }
         />
         <Route
           path="/dashboard"
-          element={userData ? <Dashboard /> : <Navigate to="/admin/login" replace />}
+          element={
+            userData ? <Dashboard /> : <Navigate to="/admin/login" replace />
+          }
         />
         <Route
           path="/admin-list"
-          element={userData ? <AdminList userData={userData} /> : <Navigate to="/admin/login" replace />}
+          element={
+            userData ? (
+              <AdminList userData={userData} />
+            ) : (
+              <Navigate to="/admin/login" replace />
+            )
+          }
         />
         <Route
           path="/student-list"
-          element={userData ? <StudentList userData={userData} /> : <Navigate to="/admin/login" replace />}
+          element={
+            userData ? (
+              <StudentList userData={userData} />
+            ) : (
+              <Navigate to="/admin/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/supervisor-list"
+          element={
+            userData ? (
+              <SupervisorList userData={userData} />
+            ) : (
+              <Navigate to="/admin/login" replace />
+            )
+          }
         />
         <Route
           path="/profile"
-          element={userData ? <AdminProfile userData={userData} /> : <Navigate to="/admin/login" replace />}
+          element={
+            userData ? (
+              <AdminProfile userData={userData} />
+            ) : (
+              <Navigate to="/admin/login" replace />
+            )
+          }
         />
         <Route
           path="/edit-admin-profile/:id"
-          element={userData ? <EditAdminProfile userData={userData} /> : <Navigate to="/admin/login" replace />}
+          element={
+            userData ? (
+              <EditAdminProfile userData={userData} />
+            ) : (
+              <Navigate to="/admin/login" replace />
+            )
+          }
         />
         <Route
           path="/edit-student-profile/:id"
-          element={userData ? <EditStudentProfile userData={userData} /> : <Navigate to="/admin/login" replace />}
+          element={
+            userData ? (
+              <EditStudentProfile userData={userData} />
+            ) : (
+              <Navigate to="/admin/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/edit-supervisor-profile/:id"
+          element={
+            userData ? (
+              <EditSupervisorProfile userData={userData} />
+            ) : (
+              <Navigate to="/admin/login" replace />
+            )
+          }
         />
       </Routes>
-    </>
+    </div>
   );
 }

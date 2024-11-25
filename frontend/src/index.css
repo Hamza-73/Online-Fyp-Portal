@@ -25,3 +25,94 @@ input[type="password"]::-webkit-text-security {
 input[type="password"] {
   -webkit-appearance: none; /* Remove default styling for Safari */
 }
+
+
+/* Base layout styles
+.content-wrapper {
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar-open {
+  margin-left: 16rem;
+}
+
+.sidebar-closed {
+  margin-left: 0;
+}
+
+.dashboard-container {
+  padding: 20px;
+  transition: margin-left 0.3s ease;
+}
+
+@media (min-width: 1024px) {
+  .ml-64 {
+    margin-left: 16rem; 
+  }
+}
+
+#menu-btn {
+  background-color: red;
+  border: 2px solid black;
+}
+
+.toggle-button {
+  transition: transform 0.3s ease;
+}
+
+.toggle-button.open svg {
+  transform: rotate(90deg);
+}
+
+.toggle-button.toggling svg {
+  animation: wiggle 0.3s ease;
+}
+
+@keyframes wiggle {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+  75% {
+    transform: rotate(-10deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.fixed {
+  transition: transform 0.3s ease;
+} */
+
+
+#menu-btn {
+  background-color: red;
+  border: 2px solid black;
+}
+
+/* Hamburger/Cross Animation */
+button span {
+  transition: all 0.3s ease;
+}
+
+button span.rotate-45 {
+  transform: rotate(45deg);
+}
+
+button span.-rotate-45 {
+  transform: rotate(-45deg);
+}
+
+button span.translate-y-2 {
+  transform: translateY(10px) !important;
+}
+
+button span.-translate-y-2 {
+  transform: translateY(-10px) !important;
+}

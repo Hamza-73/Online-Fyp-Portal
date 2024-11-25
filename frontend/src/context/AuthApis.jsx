@@ -30,18 +30,55 @@ export function AuthApis({ children }) {
         }
     }
 
-    const getStudentProfile = async (id) =>{
+    const registerSupervisor = async (data)=>{
         try {
-            const res = await fetch(`${server}/student/get-profile/${id}`,{
-                method: 'GET',
+            console.log("data ", data)
+            const res = await fetch(`${server}/auth/register-supervisor`,{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    
+                },
                 credentials: 'include',
+                body: JSON.stringify(data)
             });
             const result = await res.json();
             console.log("result is ", result);
             return result;
         } catch (error) {
             console.error('Error registering :', error);
-            return { success: false, message: 'Getting Student Profile failed due to an error.' };
+            return { success: false, message: 'Registering Supervisor failed due to an error.' };
+        }
+    }
+
+    const loginUser = async (data)=>{
+        try {
+            const res = await fetch(`${server}/auth/login`,{
+                method: 'POST',
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                credentials:"include",
+                body : JSON.stringify(data)
+            });
+            const result = await res.json();
+            return result;
+        } catch (error) {
+            console.log("error in loging in user", error);
+        }
+    }
+
+    const getGroups = async (data)=>{
+        try {
+            const res = await fetch(`${server}/auth/get-groups`,{
+                method: 'GET',
+                credentials:"include",
+                body : JSON.stringify(data)
+            });
+            const result = await res.json();
+            return result;
+        } catch (error) {
+            console.log("error in finding", error);
         }
     }
     
@@ -49,7 +86,9 @@ export function AuthApis({ children }) {
         <AuthContext.Provider
             value={{
                 registerStudent,
-                getStudentProfile
+                loginUser,
+                registerSupervisor,
+                getGroups
             }}
         >
             {children}

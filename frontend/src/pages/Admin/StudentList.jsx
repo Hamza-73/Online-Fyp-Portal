@@ -4,17 +4,17 @@ import toast, { Toaster } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { AuthContext } from '../../context/AuthApis.jsx';
+import { StudentContext } from '../../context/StudentApis.jsx';
 import { FaUser, FaEnvelope, FaLock, FaIdCard, FaBook, FaUserFriends, FaBuilding, FaFingerprint } from 'react-icons/fa';
 
 export default function StudentList({ userData }) {
     const navigate = useNavigate();
     const { registerStudent } = useContext(AuthContext);
+    const { deleteStudent } = useContext(StudentContext);
     const [students, setStudents] = useState([]);
     const [selectedStudent, setSelectedStudent] = useState({});
     const [showModal, setShowModal] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState({});
 
     const getStudents = async () => {
@@ -39,10 +39,6 @@ export default function StudentList({ userData }) {
         }));
     };
 
-    const handlePasswordChange = (e) => {
-        let newValue = e.target.value.trim();
-        setPassword(newValue);
-    };
 
     const handleAddClick = () => {
         setSelectedStudent({});
@@ -76,7 +72,6 @@ export default function StudentList({ userData }) {
         }
         const studentData = {
             ...selectedStudent,
-            password,
         };
 
         try {
@@ -86,7 +81,6 @@ export default function StudentList({ userData }) {
                 getStudents();
                 setShowModal(false);
                 setSelectedStudent({}); // Reset selected student
-                setPassword(''); // Reset password
             } else {
                 toast.error(response.message || 'Failed to register student.');
             }
@@ -95,6 +89,19 @@ export default function StudentList({ userData }) {
             toast.error('An error occurred while registering the student.');
         }
     };
+
+    const handleDelete = async (id) => {
+        const confirmDelete = window.confirm("Are you sure you want to delete this student?");
+        if (confirmDelete) {
+            const res = await deleteStudent(id);
+            if (res.success) {
+                toast.success('Student deleted successfully!');
+                setStudents((prevStudent) => prevStudent.filter(students => students._id !== id));
+            } else {
+                toast.error(res.message || 'Failed to delete student.');
+            }
+        }
+    }
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -128,7 +135,9 @@ export default function StudentList({ userData }) {
                                         <Link to={`/admin/edit-student-profile/${student._id}`} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                             Edit
                                         </Link>
-                                        <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                                        <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                            onClick={() => handleDelete(student._id)}
+                                        >
                                             Delete
                                         </button>
                                     </td>}
@@ -287,30 +296,6 @@ export default function StudentList({ userData }) {
                                     {errors.cnic && <p className="text-red-500 text-sm">{errors.cnic}</p>}
                                 </div>
 
-                                <div className="mb-4 col-span-2 relative">
-                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                        Password
-                                    </label>
-                                    <FaLock className="absolute left-3 top-8 text-gray-500" />
-                                    <div className="relative">
-                                        <input
-                                            type={showPassword ? 'text' : 'password'}
-                                            id="password"
-                                            name="password"
-                                            value={password}
-                                            onChange={handlePasswordChange}
-                                            className="mt-1 block w-full px-10 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100"
-                                            required
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-2 top-2 text-gray-500"
-                                        >
-                                            {showPassword ? <FaEyeSlash /> : <FaEye />}
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
                             <div className="flex justify-end">
                                 <button type="button" onClick={() => setShowModal(false)} className="bg-gray-300 text-black px-4 py-2 rounded mr-2">

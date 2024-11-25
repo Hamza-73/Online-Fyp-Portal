@@ -1,37 +1,37 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
-import { StudentContext } from '../../context/StudentApis.jsx';
+import { SupervisorContext } from '../../context/SupervisorApis.jsx'; // Import the Supervisor context
 import { toast, Toaster } from 'react-hot-toast';
 
-export default function EditStudentProfile() {
-    const { id } = useParams(); // Get the student ID from the URL
-    const [student, setStudent] = useState(null); // State to store student details
+export default function EditSupervisorProfile() {
+    const { id } = useParams(); // Get the supervisor ID from the URL
+    const [supervisor, setSupervisor] = useState(null); // State to store supervisor details
     const [loading, setLoading] = useState(true); // State to manage loading state
-    const { editStudentProfile, getStudentProfile } = useContext(StudentContext); // Access edit function from context
+    const { editSupervisorProfile, getSupervisorProfile } = useContext(SupervisorContext); // Access edit function from context
 
     const [isEditing, setIsEditing] = useState(false); // State to manage edit mode
-    const [originalData, setOriginalData] = useState({}); // State to store original student data
-    const [editedStudent, setEditedStudent] = useState({}); // State to track edited student data
+    const [originalData, setOriginalData] = useState({}); // State to store original supervisor data
+    const [editedSupervisor, setEditedSupervisor] = useState({}); // State to track edited supervisor data
 
     useEffect(() => {
-        const fetchStudent = async () => {
+        const fetchSupervisor = async () => {
             try {
-                const data = await getStudentProfile(id); // Call the API method to fetch the student profile
+                const data = await getSupervisorProfile(id); // Call the API method to fetch the supervisor profile
                 if (data.success) {
-                    setStudent(data.student); // Set student data in state
-                    setOriginalData(data.student); // Store the original data for comparison
-                    setEditedStudent(data.student); // Initialize editedStudent with fetched data
+                    setSupervisor(data.supervisor); // Set supervisor data in state
+                    setOriginalData(data.supervisor); // Store the original data for comparison
+                    setEditedSupervisor(data.supervisor); // Initialize editedSupervisor with fetched data
                 } else {
-                    toast.error(data.message)
+                    toast.error(data.message);
                 }
             } catch (err) {
-                console.error('Error fetching student data:', err);
+                console.error('Error fetching supervisor data:', err);
             } finally {
                 setLoading(false); // Set loading to false after fetching
             }
         };
 
-        fetchStudent();
+        fetchSupervisor();
     }, [id]);
 
     const handleEditToggle = () => {
@@ -41,10 +41,9 @@ export default function EditStudentProfile() {
     const handleChange = (e) => {
         let { name, value } = e.target; // Get input name and value
 
-        // Only normalize the value if the field is being saved, allowing spaces while typing
-        if (name === "name" || name === "father") {
-            value = value.replace(/^\s+/, ''); // Remove leading spaces
-            value = value.replace(/\s{2,}/g, ' '); // Replace multiple spaces with a single space
+        // Normalize the value
+        if (name === "name" || name === "designation") {
+            value = value.replace(/^\s+/, '').replace(/\s{2,}/g, ' '); // Remove leading spaces and multiple spaces
         }
 
         // Remove spaces from email
@@ -52,36 +51,36 @@ export default function EditStudentProfile() {
             value = value.replace(/\s+/g, ''); // Remove all spaces
         }
 
-        setEditedStudent((prev) => ({ ...prev, [name]: value })); // Update edited student data
+        setEditedSupervisor((prev) => ({ ...prev, [name]: value })); // Update edited supervisor data
     };
 
     const handleCancel = () => {
-        setEditedStudent(originalData); // Reset to original data
+        setEditedSupervisor(originalData); // Reset to original data
         setIsEditing(false); // Exit edit mode
     };
 
     const handleSave = async () => {
         // Normalize before saving
-        const normalizedEditedStudent = {
-            ...editedStudent,
-            name: editedStudent.name.replace(/\s+/g, ' ').trim(), // Normalize name
-            father: editedStudent.father.replace(/\s+/g, ' ').trim(), // Normalize father's name
-            email: editedStudent.email.replace(/\s+/g, ''), // Remove spaces from email
+        const normalizedEditedSupervisor = {
+            ...editedSupervisor,
+            name: editedSupervisor.name.replace(/\s+/g, ' ').trim(), // Normalize name
+            designation: editedSupervisor.designation.replace(/\s+/g, ' ').trim(), // Normalize designation
+            email: editedSupervisor.email.replace(/\s+/g, ''), // Remove spaces from email
         };
 
-        const data = await editStudentProfile(id, normalizedEditedStudent); // Call the API method to update the student profile
+        const data = await editSupervisorProfile(id, normalizedEditedSupervisor); // Call the API method to update the supervisor profile
         if (data.success) {
-            setStudent(normalizedEditedStudent); // Update the displayed student data immediately
-            setOriginalData(normalizedEditedStudent); // Update the original data to match the edited data
+            setSupervisor(normalizedEditedSupervisor); // Update the displayed supervisor data immediately
+            setOriginalData(normalizedEditedSupervisor); // Update the original data to match the edited data
             setIsEditing(false); // Exit edit mode
-            toast.success(data.message)
+            toast.success(data.message);
         } else {
-            toast.error(data.message)
+            toast.error(data.message);
         }
     };
 
     const isSaveDisabled = Object.keys(originalData).every(key =>
-        originalData[key].toString().trim().toLowerCase() === editedStudent[key].toString().trim().toLowerCase()
+        originalData[key].toString().trim().toLowerCase() === editedSupervisor[key].toString().trim().toLowerCase()
     ); // Check if the data has changed case-insensitively, ignoring leading/trailing spaces
 
     if (loading) return <div>Loading...</div>;
@@ -89,9 +88,9 @@ export default function EditStudentProfile() {
     return (
         <div className="min-h-screen flex justify-center">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl">
-                <h2 className="text-2xl font-semibold mb-6 text-center">Student Profile</h2>
+                <h2 className="text-2xl font-semibold mb-6 text-center">Supervisor Profile</h2>
 
-                {student && (
+                {supervisor && (
                     <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
                         {/* Grid for details */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -101,71 +100,20 @@ export default function EditStudentProfile() {
                                 <input
                                     type="text"
                                     name="name"
-                                    value={editedStudent.name}
+                                    value={editedSupervisor.name}
                                     onChange={handleChange}
                                     disabled={!isEditing}
                                     className="p-3 border border-gray-300 rounded-md w-full"
                                 />
                             </div>
 
-                            {/* Father's Name */}
-                            <div>
-                                <label className="block text-gray-700 font-semibold mb-2">Father's Name</label>
-                                <input
-                                    type="text"
-                                    name="father"
-                                    value={editedStudent.father}
-                                    onChange={handleChange}
-                                    disabled={!isEditing}
-                                    className="p-3 border border-gray-300 rounded-md w-full"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Grid for Roll No, Email, Semester, Batch */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div>
-                                <label className="block text-gray-700 font-semibold mb-2">Roll No</label>
-                                <input
-                                    type="text"
-                                    name="rollNo"
-                                    value={editedStudent.rollNo}
-                                    onChange={handleChange}
-                                    disabled={!isEditing}
-                                    className="p-3 border border-gray-300 rounded-md w-full"
-                                />
-                            </div>
-
+                            {/* Email */}
                             <div>
                                 <label className="block text-gray-700 font-semibold mb-2">Email</label>
                                 <input
                                     type="email"
                                     name="email"
-                                    value={editedStudent.email}
-                                    onChange={handleChange}
-                                    disabled={!isEditing}
-                                    className="p-3 border border-gray-300 rounded-md w-full"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-gray-700 font-semibold mb-2">Semester</label>
-                                <input
-                                    type="text"
-                                    name="semester"
-                                    value={editedStudent.semester}
-                                    onChange={handleChange}
-                                    disabled={!isEditing}
-                                    className="p-3 border border-gray-300 rounded-md w-full"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-gray-700 font-semibold mb-2">Batch</label>
-                                <input
-                                    type="text"
-                                    name="batch"
-                                    value={editedStudent.batch}
+                                    value={editedSupervisor.email}
                                     onChange={handleChange}
                                     disabled={!isEditing}
                                     className="p-3 border border-gray-300 rounded-md w-full"
@@ -173,28 +121,72 @@ export default function EditStudentProfile() {
                             </div>
                         </div>
 
-                        {/* CNIC and Department in 2 columns */}
+                        {/* CNIC and Designation in 2 columns */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            {/* Username */}
+                            <div>
+                                <label className="block text-gray-700 font-semibold mb-2">Username</label>
+                                <input
+                                    type="text"
+                                    name="username"
+                                    value={editedSupervisor.username}
+                                    onChange={handleChange}
+                                    disabled={!isEditing}
+                                    className="p-3 border border-gray-300 rounded-md w-full"
+                                />
+                            </div>
+
                             {/* CNIC */}
                             <div>
                                 <label className="block text-gray-700 font-semibold mb-2">CNIC</label>
                                 <input
                                     type="text"
                                     name="cnic"
-                                    value={editedStudent.cnic}
+                                    value={editedSupervisor.cnic}
                                     onChange={handleChange}
                                     disabled={!isEditing}
                                     className="p-3 border border-gray-300 rounded-md w-full"
                                 />
                             </div>
 
-                            {/* Department */}
+                        </div>
+
+                        {/* Department */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-gray-700 font-semibold mb-2">Department</label>
                                 <input
                                     type="text"
                                     name="department"
-                                    value={editedStudent.department}
+                                    value={editedSupervisor.department}
+                                    onChange={handleChange}
+                                    disabled={!isEditing}
+                                    className="p-3 border border-gray-300 rounded-md w-full"
+                                />
+                            </div>
+
+                            {/* Designation */}
+                            <div>
+                                <label className="block text-gray-700 font-semibold mb-2">Designation</label>
+                                <input
+                                    type="text"
+                                    name="designation"
+                                    value={editedSupervisor.designation}
+                                    onChange={handleChange}
+                                    disabled={!isEditing}
+                                    className="p-3 border border-gray-300 rounded-md w-full"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-gray-700 font-semibold mb-2">Slots</label>
+                                <input
+                                    type="text"
+                                    name="slots"
+                                    value={editedSupervisor.slots}
                                     onChange={handleChange}
                                     disabled={!isEditing}
                                     className="p-3 border border-gray-300 rounded-md w-full"
@@ -232,7 +224,7 @@ export default function EditStudentProfile() {
                     </form>
                 )}
             </div>
-            <Toaster/>
+            <Toaster />
         </div>
     );
 }

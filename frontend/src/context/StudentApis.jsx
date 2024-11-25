@@ -7,29 +7,142 @@ export const StudentContext = createContext();
 
 // AdminProvider component to wrap your app
 export function StudentApis({ children }) {
-    
-    const editStudentProfile = async (id, data)=>{
+
+    const editStudentProfile = async (id, data) => {
         try {
-            const res = await fetch(`${server}/student/edit-profile/${id}`,{
+            const res = await fetch(`${server}/student/edit-profile/${id}`, {
                 method: 'PUT',
-                headers:{
+                headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials:"include",
+                credentials: "include",
                 body: JSON.stringify(data)
             });
             const result = await res.json();
             console.log("result is ", result);
             return result;
         } catch (error) {
-            
+            console.log("error in editing student", error)
         }
     }
-    
+
+    const getStudentProfile = async (id) => {
+        try {
+            const res = await fetch(`${server}/student/get-profile/${id}`, {
+                method: 'GET',
+                credentials: 'include',
+            });
+            const result = await res.json();
+            console.log("result is ", result);
+            return result;
+        } catch (error) {
+            console.error('Error registering :', error);
+            return { success: false, message: 'Getting Student Profile failed due to an error.' };
+        }
+    }
+
+    const getProfile = async () => {
+        try {
+            const res = await fetch(`${server}/student/get-profile`, {
+                method: 'GET',
+                credentials: 'include',
+            });
+            const result = await res.json();
+            console.log("result is ", result);
+            return result;
+        } catch (error) {
+            console.error('Error registering :', error);
+            return { success: false, message: 'Getting Student Profile failed due to an error.' };
+        }
+    }
+
+    const deleteStudent = async (id) => {
+        try {
+            const res = await fetch(`${server}/student/delete-student/${id}`, {
+                method: "DELETE",
+                credentials: "include"
+            });
+            const result = await res.json();
+            return result;
+        } catch (error) {
+            console.log("error in deleting student", error)
+        }
+    }
+
+    const sendProjectRequest = async (id, data) => {
+        try {
+            const res = await fetch(`${server}/student/send-project-request/${id}`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    "Content-Type": "Application/json"
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            console.log("result is ", result);
+            return result;
+        } catch (error) {
+            console.error('Error getting :', error);
+            return { success: false, message: 'supervisor not found' };
+        }
+    }
+
+    const getSupervisorDetail = async (id)=>{
+        try {
+            const res = await fetch(`${server}/student/get-supervisor-detail/${id}`,{
+                method: 'GET',
+            });
+            const result = await res.json();
+            console.log("result is supervisor ", result)
+            return result;
+        } catch (error) {
+            console.error('Error getting :', error);
+            return { success: false, message: 'supervisor not found' };
+        }
+    }
+
+    const fetchMyGroup = async ()=>{
+        try {
+            const res = await fetch(`${server}/student/my-group`,{
+                method: 'GET',
+                credentials:"include"
+              });
+              const data = await res.json();
+              return data;
+        } catch (error) {
+            console.error('Error getting :', error);
+            return { success: false, message: 'group not found' };            
+        }
+        
+      }
+
+    const requestToJoinGroup = async (groupId)=>{
+        try {
+            const res = await fetch(`${server}/student/request-to-join-group/${groupId}`,{
+                method: 'POST',
+                credentials:"include"
+              });
+              const data = await res.json();
+              return data;
+        } catch (error) {
+            console.error('Error getting :', error);
+            return { success: false, message: 'group not found' };            
+        }
+        
+      }
+
     return (
         <StudentContext.Provider
             value={{
-                editStudentProfile
+                editStudentProfile,
+                deleteStudent,
+                getStudentProfile,
+                getProfile,
+                sendProjectRequest,
+                getSupervisorDetail,
+                fetchMyGroup,
+                requestToJoinGroup
             }}
         >
             {children}

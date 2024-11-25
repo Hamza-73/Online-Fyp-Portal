@@ -15,8 +15,7 @@ export default function EditAdminProfile({ userData }) {
   });
   const [originalAdmin, setOriginalAdmin] = useState(null); // Store original data for comparison
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState(''); // State to hold success message
+  const [isEditing, setIsEditing] = useState(false); // New state to track if the form is in edit mode
 
   const { getAdminProfile, editAdmin } = useContext(AdminContext); // Get editAdmin from context
 
@@ -26,7 +25,6 @@ export default function EditAdminProfile({ userData }) {
       try {
         const data = await getAdminProfile(id);
         if (!data.success) {
-          setErrorMessage(data.message); // Set error message if request fails
           setLoading(false);
           return;
         }
@@ -34,7 +32,6 @@ export default function EditAdminProfile({ userData }) {
         setOriginalAdmin(data.admin); // Store the original data for comparison
       } catch (err) {
         console.error('Error fetching admin:', err);
-        setErrorMessage('An error occurred while fetching the profile.');
       }
       setLoading(false);
     };
@@ -68,15 +65,21 @@ export default function EditAdminProfile({ userData }) {
     try {
       const response = await editAdmin(id, admin); // Use editAdmin from context
       if (response.success) {
-        toast.success(response.message)
+        toast.success(response.message);
         setOriginalAdmin(admin); // Update originalAdmin to current admin state
+        setIsEditing(false); // Disable edit mode after saving
       } else {
-        toast.error(response.message)
+        toast.error(response.message);
       }
     } catch (err) {
       console.error('Error updating profile:', err);
       toast.error('An error occurred while updating the profile.');
     }
+  };
+
+  const handleCancel = () => {
+    setAdmin(originalAdmin); // Reset form values to original
+    setIsEditing(false); // Disable edit mode
   };
 
   // Function to check if the current form values are different from the original ones
@@ -98,9 +101,8 @@ export default function EditAdminProfile({ userData }) {
 
   return (
     <div className="min-h-screen flex justify-center">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl">
         <h2 className="text-2xl font-semibold mb-6 text-center">Edit Profile</h2>
-
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* First Name and Last Name on the same line */}
@@ -113,6 +115,7 @@ export default function EditAdminProfile({ userData }) {
                 name="fname"
                 value={admin.fname}
                 onChange={handleChange}
+                disabled={!isEditing} // Disable the field when not editing
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring focus:ring-maroon focus:outline-none"
                 placeholder="Enter first name"
               />
@@ -126,6 +129,7 @@ export default function EditAdminProfile({ userData }) {
                 name="lname"
                 value={admin.lname}
                 onChange={handleChange}
+                disabled={!isEditing} // Disable the field when not editing
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring focus:outline-none"
                 placeholder="Enter last name"
               />
@@ -140,6 +144,7 @@ export default function EditAdminProfile({ userData }) {
               name="username"
               value={admin.username}
               onChange={handleChange}
+              disabled={!isEditing} // Disable the field when not editing
               className="w-full p-3 border border-gray-300 rounded-md focus:ring focus:outline-none"
               placeholder="Enter username"
             />
@@ -153,6 +158,7 @@ export default function EditAdminProfile({ userData }) {
               name="email"
               value={admin.email}
               onChange={handleChange}
+              disabled={!isEditing} // Disable the field when not editing
               className="w-full p-3 border border-gray-300 rounded-md focus:ring focus:outline-none"
               placeholder="Enter email address"
             />
@@ -166,7 +172,7 @@ export default function EditAdminProfile({ userData }) {
               name="write_permission"
               checked={admin.write_permission}
               onChange={handleCheckboxChange}
-              disabled={!userData.superAdmin}
+              disabled={!isEditing || !userData.superAdmin} // Disable the checkbox when not editing or not a superAdmin
               className="mr-2 h-5 w-5"
             />
             <span className="text-gray-700">
@@ -176,20 +182,43 @@ export default function EditAdminProfile({ userData }) {
             </span>
           </div>
 
-          {/* Submit Button */}
-          <div>
-            <button
-              type="submit"
-              disabled={!isFormChanged()} // Disable if form hasn't changed
-              className={`w-full text-white font-semibold py-2 rounded-md focus:outline-none focus:ring-2  
-          ${!isFormChanged() ? 'bg-gray-400' : 'bg-[maroon] hover:bg-[maroon]'}`} // Change color when disabled
-            >
-              Save Changes
-            </button>
+          {/* Buttons */}
+          <div className="flex justify-between items-center">
+            {isEditing ? (
+              <>
+                {/* Cancel Button */}
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="bg-gray-400 text-white font-semibold py-2 px-4 rounded-md focus:outline-none focus:ring-2"
+                >
+                  Cancel
+                </button>
+
+                {/* Save Button */}
+                <button
+                  type="submit"
+                  disabled={!isFormChanged()} // Disable if form hasn't changed
+                  className={`bg-[maroon] text-white font-semibold py-2 px-4 rounded-md focus:outline-none focus:ring-2  
+                    ${!isFormChanged() ? 'bg-gray-400' : 'hover:bg-[maroon]'}`}
+                >
+                  Save
+                </button>
+              </>
+            ) : (
+              // Edit Button
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)} // Enable edit mode when clicked
+                className="bg-[maroon] text-white font-semibold py-2 px-4 rounded-md focus:outline-none focus:ring-2 hover:bg-[maroon]"
+              >
+                Edit
+              </button>
+            )}
           </div>
         </form>
       </div>
-      <Toaster/>
+      <Toaster />
     </div>
   );
 }

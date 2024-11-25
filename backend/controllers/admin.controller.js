@@ -193,20 +193,22 @@ module.exports.login = async (req, res) => {
         }
 
         // Create JWT token
-        const token = jwt.sign({ id: admin.id, role: 'admin' }, JWT_KEY, { expiresIn: '2h' });
+        const token = jwt.sign({ id: admin.id, role: 'admin' }, JWT_KEY, { expiresIn: '48h' });
 
         // Prepare user data (excluding password)
         const userData = { ...admin._doc }; // Spread the document data
         delete userData.password; // Remove password from the data
         delete userData.requests; // Remove password from the data
 
+        
+        const tokenWithRole = JSON.stringify({ token, role:"admin" });
 
         // Set userData in the cookie
-        res.cookie('token', token, {
+        res.cookie('auth', tokenWithRole, {
             httpOnly: false,  // Set to true if you don't want JS access to the cookie
             secure: process.env.NODE_ENV === 'production',  // Only sent over HTTPS in production
             sameSite: 'strict',  // Prevent CSRF attacks
-            maxAge: 7200000  // Cookie expiry in 2 hours
+            maxAge: 3600000*24  // Cookie expiry in 48 hours
         });
 
 

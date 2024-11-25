@@ -49,7 +49,7 @@ export default function Login({ user, onLogin }) {
 
   return (
     <>
-      <div className="min-h-screen flex items-center justify-center ">
+      <div className="lg:ml-0 min-h-screen flex items-center justify-center ">
         <div className="flex w-full justify-center max-w-6xl h-screen bg-white rounded-lg shadow-lg overflow-hidden">
 
           {/* Left Side: Image */}
