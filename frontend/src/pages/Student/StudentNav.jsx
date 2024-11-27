@@ -4,6 +4,7 @@ import AVATAR from '../../assets/images/avatar1.png';
 import '../../assets/css/nav.css';
 import { Link, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import { IoIosNotifications } from "react-icons/io";
 
 const StudentNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
   const navigate = useNavigate();
@@ -54,9 +55,6 @@ const StudentNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
         // onClick={toggleSidebar} 
         >
           <img src={LOGO} alt="GCU Logo" className="mb-4 w-20 mx-auto" />
-          <Link to="/student/profile" className="p-2 text-lg hover:bg-gray-200">
-            Profile
-          </Link>
           <Link to="/student/supervisors" className="p-2 text-lg hover:bg-gray-200">
             Supervisors
           </Link>
@@ -76,9 +74,21 @@ const StudentNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
       </div>
 
       {/* Avatar and User Info */}
-      <div className="fixed top-0 right-0 w-full bg-[maroon] shadow-md flex items-center justify-end space-x-4 p-10 z-35"
+      <div
+        className="fixed top-0 right-0 w-full bg-[maroon] shadow-md flex items-center justify-end space-x-4 p-10 z-35"
         style={{ height: '64px' }} // Adjust height as needed
       >
+        <Link to='/student/notifications'>
+          <div className="relative">
+            <IoIosNotifications className='text-white text-4xl cursor-pointer' />
+            {/* Badge */}
+            {userData?.notifications?.unseen?.length > 0 && (
+              <span className="absolute top-0 right-0 rounded-full bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center">
+                {userData.notifications.unseen.length}
+              </span>
+            )}
+          </div>
+        </Link>
         <Link to='/student/profile' className='flex items-center space-x-4'>
           <img
             src={AVATAR}

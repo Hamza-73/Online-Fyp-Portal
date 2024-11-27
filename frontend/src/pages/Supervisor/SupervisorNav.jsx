@@ -3,6 +3,7 @@ import LOGO from '../../assets/images/main-logo.png';
 import AVATAR from '../../assets/images/avatar1.png';
 import { Link, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import { IoIosNotifications } from "react-icons/io";
 
 const SupervisorNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
   const navigate = useNavigate();
@@ -46,11 +47,21 @@ const SupervisorNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => 
       >
         <div className="flex flex-col p-4">
           <img src={LOGO} alt="GCU Logo" className="mb-4 w-20 mx-auto" />
-          <Link to="/supervisor/profile" className="p-2 text-lg hover:bg-gray-200">
-            Profile
-          </Link>
-          <Link to="/supervisor/requests" className="p-2 text-lg hover:bg-gray-200">
+          <Link to="/supervisor/requests" className="p-2 text-lg hover:bg-gray-200 relative flex items-center">
             Requests
+            {userData?.projectRequest?.length > 0 && (
+              <span className="ml-2 bg-red-500 text-white text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                {userData?.projectRequest?.length}
+              </span>
+            )}
+          </Link>
+
+          <Link to="/supervisor/groups" className="p-2 text-lg hover:bg-gray-200">
+            Groups
+          </Link>
+
+          <Link to='/supervisor/my-groups' className="p-2 text-lg hover:bg-gray-200">
+            Groups Under Me
           </Link>
           <button
             onClick={handleLogout}
@@ -67,6 +78,17 @@ const SupervisorNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => 
         className="fixed top-0 right-0 w-full bg-[maroon] shadow-md flex items-center justify-end space-x-4 p-10 z-35"
         style={{ height: '64px' }} // Adjust height as needed
       >
+        <Link to='/supervisor/notifications'>
+          <div className="relative">
+            <IoIosNotifications className='text-white text-4xl cursor-pointer' />
+            {/* Badge */}
+            {userData?.notifications?.unseen?.length > 0 && (
+              <span className="absolute top-0 right-0 rounded-full bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center">
+                {userData.notifications.unseen.length}
+              </span>
+            )}
+          </div>
+        </Link>
         <Link to='/supervisor/profile' className='flex items-center space-x-4'>
           <img
             src={AVATAR}
@@ -76,6 +98,7 @@ const SupervisorNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => 
           <h1 className="text-xl text-white font-semibold">{userData?.username || 'User'}</h1>
         </Link>
       </div>
+
     </header>
   );
 };

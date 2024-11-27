@@ -1,40 +1,37 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { toast, Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa'; // Import the icons
+import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import Particles from 'react-tsparticles'; // For background particles
 import GCU_COURAGE_TO_KNOW from './assets/images/gcu-logo-courage-tok-know.jpg';
 import { AuthContext } from './context/AuthApis';
 
 function Auth() {
     const { loginUser } = useContext(AuthContext);
     const navigate = useNavigate();
-  
+
     const [data, setData] = useState({
         username: '',
         password: ''
     });
 
-    const [showPassword, setShowPassword] = useState(false); // State to manage password visibility
+    const [showPassword, setShowPassword] = useState(false);
+    const [currentSlogan, setCurrentSlogan] = useState(0);
+
+    const slogans = [
+        "Unlock Your Potential with Us!",
+        "Achieve More, Dream Bigger!",
+        "Your Journey to Success Starts Here!",
+        "Innovate, Inspire, Impact!"
+    ];
 
     useEffect(() => {
-        // Check if the user is already logged in by checking the auth cookie
-        const authCookie = document.cookie.split('; ').find(row => row.startsWith('auth='));
-        if (authCookie) {
-            // Decode the cookie value before parsing it as JSON
-            const decodedCookie = decodeURIComponent(authCookie.split('=')[1]);
-            try {
-                const auth = JSON.parse(decodedCookie);
-                const { token, role } = auth;
+        const sloganInterval = setInterval(() => {
+            setCurrentSlogan((prev) => (prev + 1) % slogans.length);
+        }, 3000); // Change slogan every 3 seconds
 
-                // Assuming a function `isTokenValid` that checks the token expiration
-                if (token && role && isTokenValid(token)) {
-                    navigate(`/${role}/profile`); // Redirect if token is valid
-                }
-            } catch (error) {
-                console.error("Error parsing cookie:", error);
-            }
-        }
-    }, [navigate]);
+        return () => clearInterval(sloganInterval);
+    }, [slogans.length]);
 
     const handleInputChange = (e) => {
         setData({ ...data, [e.target.name]: e.target.value });
@@ -44,10 +41,8 @@ function Auth() {
         e.preventDefault();
         try {
             const response = await loginUser(data);
-            console.log("response is ", response);
             if (response.success) {
                 toast.success(response.message);
-                // Store token and role in cookies
                 const authData = { token: response.token, role: response.role };
                 document.cookie = `auth=${encodeURIComponent(JSON.stringify(authData))}; path=/; max-age=${3600 * 24}`;
 
@@ -64,100 +59,129 @@ function Auth() {
     };
 
     const handleTogglePasswordVisibility = () => {
-        setShowPassword((prev) => !prev); // Toggle the state
-    };
-
-    const isTokenValid = (token) => {
-        // Implement your token validation logic here (e.g., check expiration)
-        try {
-            const decodedToken = JSON.parse(atob(token.split('.')[1])); // Decode JWT token
-            const currentTime = Date.now() / 1000; // Get current time in seconds
-            return decodedToken.exp > currentTime; // Check if token is expired
-        } catch (error) {
-            return false; // Invalid token or unable to decode
-        }
+        setShowPassword((prev) => !prev);
     };
 
     return (
-        <>
-            <div className="min-h-screen flex items-center justify-center ">
-                <div className="lg:ml-0 flex w-full justify-center max-w-6xl h-screen bg-white rounded-lg shadow-lg overflow-hidden">
-                    {/* Right Side: Form */}
-                    <div className="w-1/2 flex items-center justify-center p-8">
-                        <div className="w-full max-w-md flex flex-col items-center space-y-6">
-                            {/* Centered Logo */}
-                            <img src={GCU_COURAGE_TO_KNOW} alt="gcu logo" className="mx-auto" />
+        <div className="relative min-h-screen flex items-center justify-center bg-gray-50 overflow-hidden">
+            <Particles
+                className="absolute inset-0 z-0"
+                options={{
+                    background: { color: { value: "#5a0006" } },
+                    particles: {
+                        number: { value: 100 },
+                        color: { value: "#ffc107" },
+                        shape: { type: "circle" },
+                        opacity: { value: 0.3 },
+                        size: { value: 5 },
+                        move: { speed: 2, direction: "none" }
+                    }
+                }}
+            />
 
-                            {/* Centered Title */}
-                            <h2 className="text-2xl font-semibold text-center text-maroon-700">Login</h2>
-
-                            {/* Form */}
-                            <form className="w-full space-y-4" onSubmit={handleSubmit}>
-
-                                {/* Username Input with Icon */}
-                                <div className="relative">
-                                    <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                                        Username
-                                    </label>
-                                    <div className="flex items-center border border-gray-300 rounded-md shadow-sm">
-                                        <span className="px-3 text-gray-500">
-                                            <FaUser />
-                                        </span>
-                                        <input
-                                            type="text"
-                                            id="username"
-                                            name="username"
-                                            required
-                                            className="flex-1 block w-full p-3 focus:outline-none focus:ring-[maroon] focus:border-[maroon] sm:text-sm border-0"
-                                            placeholder="Enter your username"
-                                            onChange={handleInputChange}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Password Input with Icon */}
-                                <div className="relative">
-                                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                        Password
-                                    </label>
-                                    <div className="flex items-center border border-gray-300 rounded-md shadow-sm">
-                                        <span className="px-3 text-gray-500">
-                                            <FaLock />
-                                        </span>
-                                        <input
-                                            type={showPassword ? 'text' : 'password'}
-                                            id="password"
-                                            name="password"
-                                            required
-                                            minLength={6}
-                                            className="flex-1 block w-full p-2 focus:outline-none focus:ring-[maroon] focus:border-[maroon] sm:text-sm border-0"
-                                            placeholder="Enter your password"
-                                            onChange={handleInputChange}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleTogglePasswordVisibility}
-                                            className="text-gray-500 focus:outline-none p-2" // Added padding for better alignment
-                                        >
-                                            {showPassword ? <FaEyeSlash /> : <FaEye />}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Submit Button */}
-                                <button
-                                    type="submit"
-                                    className="w-full py-2 px-4 bg-[maroon] text-white font-medium rounded-md shadow hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-maroon-500"
-                                >
-                                    Login
-                                </button>
-                            </form>
-                        </div>
+            <div className="relative z-10 w-full max-w-6xl flex rounded-lg overflow-hidden shadow-2xl">
+                {/* Left Side: Animated Slogans */}
+                <div className="hidden lg:flex w-1/2 text-white flex-col justify-center items-center p-8 relative"
+                     style={{
+                         background: "rgba(90, 0, 6, 0.7)",
+                         boxShadow: "0px 0px 50px 10px rgba(0, 0, 0, 0.15)",
+                         backdropFilter: "blur(106px)",
+                         WebkitBackdropFilter: "blur(106px)",
+                         backgroundImage: "linear-gradient(rgba(0, 0, 91, 1), rgba(90, 0, 6, 1))"
+                     }}>
+                    <div className="text-4xl font-bold mb-4 text-center animate-slide-in-left">
+                        {slogans[currentSlogan]}
+                    </div>
+                    <div className="text-lg text-center max-w-sm">
+                        Empower your future today. Login to get started!
                     </div>
                 </div>
-                <Toaster />
+
+                {/* Right Side: Login Form */}
+                <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-8">
+                    <div className="w-full max-w-md">
+                        <img
+                            src={GCU_COURAGE_TO_KNOW}
+                            alt="GCU Logo"
+                            className="mx-auto mb-6 animate-zoom-in"
+                        />
+                        <h2 className="text-3xl font-bold text-center" style={{ color: "#5a0006" }}>
+                            Login
+                        </h2>
+                        <form className="space-y-6" onSubmit={handleSubmit}>
+                            {/* Username Input */}
+                            <div className="relative">
+                                <label
+                                    htmlFor="username"
+                                    className="block text-sm font-medium text-gray-700"
+                                >
+                                    Username
+                                </label>
+                                <div className="flex items-center border border-gray-300 rounded-md shadow-sm hover:shadow-md transition-shadow">
+                                    <span className="px-3 text-gray-500">
+                                        <FaUser />
+                                    </span>
+                                    <input
+                                        type="text"
+                                        id="username"
+                                        name="username"
+                                        required
+                                        className="flex-1 block w-full p-3 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm border-0"
+                                        placeholder="Enter your username"
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Password Input */}
+                            <div className="relative">
+                                <label
+                                    htmlFor="password"
+                                    className="block text-sm font-medium text-gray-700"
+                                >
+                                    Password
+                                </label>
+                                <div className="flex items-center border border-gray-300 rounded-md shadow-sm hover:shadow-md transition-shadow">
+                                    <span className="px-3 text-gray-500">
+                                        <FaLock />
+                                    </span>
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        id="password"
+                                        name="password"
+                                        required
+                                        minLength={6}
+                                        className="flex-1 block w-full p-3 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm border-0"
+                                        placeholder="Enter your password"
+                                        onChange={handleInputChange}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleTogglePasswordVisibility}
+                                        className="text-gray-500 focus:outline-none px-3 hover:text-amber-500 transition-colors"
+                                    >
+                                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <button
+                                type="submit"
+                                className="w-full py-3 px-4 font-medium rounded-md shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-opacity"
+                                style={{
+                                    backgroundColor: "#ffc107",
+                                    color: "#5a0006"
+                                }}
+                            >
+                                Login
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
-        </>
+            <Toaster />
+        </div>
     );
 }
 

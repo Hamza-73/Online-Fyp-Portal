@@ -80,6 +80,21 @@ export function SupervisorApis({ children }) {
         }
     }
 
+    const getMyGroups = async ()=>{
+        try {
+            const res = await fetch(`${server}/supervisor/get-my-groups`,{
+                method: 'GET',
+                credentials: 'include',
+            });
+            const result = await res.json();
+            console.log("result is ", result);
+            return result;
+        } catch (error) {
+            console.error('Error getting profile :', error);
+            return { success: false, message: 'Getting Supervisor Profile failed due to an error.' };
+        }
+    }
+
     const getPropsalRequests = async ()=>{
         try {
             const res = await fetch(`http://localhost:4000/supervisor/view-requests`,{
@@ -131,7 +146,8 @@ export function SupervisorApis({ children }) {
                 getProfile,
                 getPropsalRequests,
                 acceptProposalRequest,
-                rejectProposalRequest
+                rejectProposalRequest,
+                getMyGroups
             }}
         >
             {children}

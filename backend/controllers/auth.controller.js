@@ -245,3 +245,96 @@ module.exports.getGroups = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+module.exports.getNotifications = async (req, res) => {
+    try {
+        const supervisor = await Supervisor.findById(req.user.id);
+        if (supervisor) return res.status(200).json({ success: true, notifications: supervisor.notifications });
+
+        const student = await Student.findById(req.user.id);
+        if (student) return res.status(200).json({ success: true, notifications: student.notifications });
+
+        return res.status(404).json({ success: false, message: "User Not Found" })
+
+
+    } catch (error) {
+        console.error("Error grouping data by supervisor:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+}
+
+module.exports.markSeenNotification = async (req, res) => {
+    try {
+        const { index } = req.params; // Get the notification index from params
+        const userId = req.user.id; // Get logged-in user ID
+
+        // Find the user in either Supervisor or Student collection
+        const user = await Supervisor.findById(userId).exec() || await Student.findById(userId).exec();
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const notificationToMove = user.notifications.unseen[index];
+
+        if (!notificationToMove) {
+            return res.status(404).json({ success: false, message: "Notification not found" });
+        }
+
+        // Move notification from unseen to seen
+        user.notifications.unseen.splice(index, 1);
+        user.notifications.seen.push(notificationToMove);
+
+        // Save the changes
+        await user.save();
+
+        return res.status(200).json({ success: true, message: "Notification marked as seen" });
+
+    } catch (error) {
+        console.error("Error marking notification as seen:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
+module.exports.removeNotification = async (req, res) => {
+    try {
+        const { type, index } = req.params; // Get the notification type and index from params
+        const userId = req.user.id; // Get logged-in user ID
+
+        // Find the user in either Supervisor or Student collection
+        const user = await Supervisor.findById(userId).exec() || await Student.findById(userId).exec();
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        // Check the type (either "seen" or "unseen") and find the notification in the correct array
+        if (type !== "seen" && type !== "unseen") {
+            return res.status(400).json({ success: false, message: "Invalid notification type" });
+        }
+
+        const notificationsArray = user.notifications[type]; // Get the array based on the type
+
+        if (!notificationsArray || notificationsArray.length === 0) {
+            return res.status(404).json({ success: false, message: `${type.charAt(0).toUpperCase() + type.slice(1)} notifications not found` });
+        }
+
+        const notificationToRemove = notificationsArray[index]; // Find the notification by index
+
+        if (!notificationToRemove) {
+            return res.status(404).json({ success: false, message: "Notification not found" });
+        }
+
+        // Remove the notification from the array
+        notificationsArray.splice(index, 1);
+
+        // Save the changes
+        await user.save();
+
+        return res.status(200).json({ success: true, message: "Notification removed successfully" });
+
+    } catch (error) {
+        console.error("Error removing notification:", error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};

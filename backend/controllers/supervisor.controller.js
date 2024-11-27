@@ -254,7 +254,7 @@ module.exports.acceptRequest = async (req, res) => {
     supervisor.projectRequest = supervisor.projectRequest.filter(request => !request.student.equals(student._id));
     await supervisor.save();
 
-    const existingGroup = await Group.findOne({ title: project.title, supervisor: supervisorId});
+    const existingGroup = await Group.findOne({ title: project.title, supervisor: supervisorId });
     if (existingGroup) {
       if (existingGroup.students.length >= 3) {
         return res.status(400).json({ success: false, message: 'The group is already full' });
@@ -284,8 +284,8 @@ module.exports.acceptRequest = async (req, res) => {
       title: project.title,
       description: project.description,
       scope: project.scope,
-      supervisor:  supervisor._id ,
-      project: project._id 
+      supervisor: supervisor._id,
+      project: project._id
     });
 
     newGroup.students.push(student._id);
@@ -383,7 +383,7 @@ module.exports.rejectRequest = async (req, res) => {
         await Project.findByIdAndDelete(requestId);
         // console.log('deleting');
       }
-      await Promise.all([ student.save(), supervisor.save()]);
+      await Promise.all([student.save(), supervisor.save()]);
       console.log("supervisor requests ", supervisor.projectRequest)
       // This line sends a response to the client.
       return res.json({ success: true, message: 'Project request rejected successfully' });
@@ -391,5 +391,26 @@ module.exports.rejectRequest = async (req, res) => {
   } catch (err) {
     console.error('Error accepting project request:', err);
     res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+}
+
+module.exports.getMyGroups = async (req, res) => {
+  try {
+    const groups = await Supervisor.findById(req.user.id)
+    .populate({
+        path: 'groups',
+        populate: {
+            path: 'students', // This will populate the students in each group
+            model: 'Student'  // Ensure the 'Student' model is correctly referenced
+        }
+    });
+
+
+    if (groups.groups || groups.groups.length > 0) return res.status(200).json({ success: true, groups: groups.groups });
+
+    return res.status(404).json({ success: false, message: 'No Groups Found' })
+  } catch (error) {
+    console.error('Error getting groups :', error);
+    res.status(500).json({ success: false, message: 'Server Error' });
   }
 }

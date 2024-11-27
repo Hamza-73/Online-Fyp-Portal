@@ -7,7 +7,8 @@ import Supervisors from './Supervisors';
 import SendRequest from './SendRequest';
 import SupervisorDetail from './SupervisorDetail';
 import MyGroup from './MyGroup';
-import Groups from '../Group/Groups';
+import Groups from './Groups';
+import Notifications from '../Notifications';
 
 export default function Student() {
   const { getProfile } = useContext(StudentContext);
@@ -92,6 +93,12 @@ export default function Student() {
           path="/groups"
           element={
             userData ? <Groups userData={userData} /> : <Navigate to="/" replace />
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            userData ? <Notifications userData={userData} /> : <Navigate to="/" replace />
           }
         />
       </Routes>

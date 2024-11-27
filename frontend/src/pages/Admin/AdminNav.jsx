@@ -13,7 +13,7 @@ const AdminNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
     if (onLogout) {
       onLogout();
     }
-    navigate('/auth');
+    navigate('/');
   };
 
   return (

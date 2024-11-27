@@ -8,15 +8,15 @@ export const AuthContext = createContext();
 
 // AdminProvider component to wrap your app
 export function AuthApis({ children }) {
-    
-    const registerStudent = async (data)=>{
+
+    const registerStudent = async (data) => {
         try {
             console.log("data ", data)
-            const res = await fetch(`${server}/auth/register-student`,{
+            const res = await fetch(`${server}/auth/register-student`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    
+
                 },
                 credentials: 'include',
                 body: JSON.stringify(data)
@@ -30,14 +30,14 @@ export function AuthApis({ children }) {
         }
     }
 
-    const registerSupervisor = async (data)=>{
+    const registerSupervisor = async (data) => {
         try {
             console.log("data ", data)
-            const res = await fetch(`${server}/auth/register-supervisor`,{
+            const res = await fetch(`${server}/auth/register-supervisor`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    
+
                 },
                 credentials: 'include',
                 body: JSON.stringify(data)
@@ -51,15 +51,15 @@ export function AuthApis({ children }) {
         }
     }
 
-    const loginUser = async (data)=>{
+    const loginUser = async (data) => {
         try {
-            const res = await fetch(`${server}/auth/login`,{
+            const res = await fetch(`${server}/auth/login`, {
                 method: 'POST',
-                headers:{
-                    "Content-Type":"application/json"
+                headers: {
+                    "Content-Type": "application/json"
                 },
-                credentials:"include",
-                body : JSON.stringify(data)
+                credentials: "include",
+                body: JSON.stringify(data)
             });
             const result = await res.json();
             return result;
@@ -68,12 +68,12 @@ export function AuthApis({ children }) {
         }
     }
 
-    const getGroups = async (data)=>{
+    const getGroups = async (data) => {
         try {
-            const res = await fetch(`${server}/auth/get-groups`,{
+            const res = await fetch(`${server}/auth/get-groups`, {
                 method: 'GET',
-                credentials:"include",
-                body : JSON.stringify(data)
+                credentials: "include",
+                body: JSON.stringify(data)
             });
             const result = await res.json();
             return result;
@@ -81,14 +81,56 @@ export function AuthApis({ children }) {
             console.log("error in finding", error);
         }
     }
-    
+
+    const getNotifications = async () => {
+        try {
+            const res = await fetch(`${server}/auth/get-notifications`, {
+                method: 'GET',
+                credentials: "include"
+            });
+            const result = await res.json();
+            return result;
+        } catch (error) {
+            console.log("error fetching notigications", error);
+        }
+    }
+
+    const markSeenNotification = async (index) => {
+        try {
+            const res = await fetch(`${server}/auth/mark-as-seen-notification/${index}`, {
+                method: 'POST',
+                credentials: "include",
+            });
+            const result = await res.json();
+            return result;
+        } catch (error) {
+            console.log("error marking notifications as seen", error);
+        }
+    }
+
+    const removeNotification = async (index,type) => {
+        try {
+            const res = await fetch(`${server}/auth/remove-notification/${index}/${type}`, {
+                method: 'POST',
+                credentials: "include",
+            });
+            const result = await res.json();
+            return result;
+        } catch (error) {
+            console.log("error marking notifications as seen", error);
+        }
+    }
+
     return (
         <AuthContext.Provider
             value={{
                 registerStudent,
                 loginUser,
                 registerSupervisor,
-                getGroups
+                getGroups,
+                getNotifications,
+                markSeenNotification,
+                removeNotification
             }}
         >
             {children}

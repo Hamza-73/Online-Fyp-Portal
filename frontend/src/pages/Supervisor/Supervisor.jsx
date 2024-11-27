@@ -4,6 +4,9 @@ import SupervisorNav from './SupervisorNav';
 import SupervisorProfile from './SupervisorProfile';
 import { SupervisorContext } from '../../context/SupervisorApis';
 import ProposalRequests from './ProposalRequests';
+import Groups from '../Group/Groups';
+import Notifications from '../Notifications';
+import MyGroups from './MyGroups';
 
 export default function Supervisor() {
   const { getProfile } = useContext(SupervisorContext);
@@ -62,7 +65,7 @@ export default function Supervisor() {
 
       {/* Main content area */}
       <div
-        className={`relative top-[100px] transition-all duration-300 flex-1 ${
+        className={`relative top-[85px] transition-all duration-300 flex-1 ${
           showSidebar && isSidebarOpen ? 'ml-[250px]' : 'ml-0'
         }`}
       >
@@ -82,6 +85,36 @@ export default function Supervisor() {
             element={
               userData ? (
                 <ProposalRequests userData={userData} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/groups"
+            element={
+              userData ? (
+                <Groups userData={userData} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              userData ? (
+                <Notifications userData={userData} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/my-groups"
+            element={
+              userData ? (
+                <MyGroups userData={userData} />
               ) : (
                 <Navigate to="/" replace />
               )
