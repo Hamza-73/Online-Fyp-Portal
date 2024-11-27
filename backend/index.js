@@ -16,7 +16,7 @@ connectDatabase();
 
 // CORS configuration
 const corsOptions = {
-  origin: 'https://fyp-seven-amber.vercel.app',
+  origin: 'http://fyp-seven-amber.vercel.app',
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type, Authorization',
   credentials: true,
