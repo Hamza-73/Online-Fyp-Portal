@@ -16,7 +16,7 @@ connectDatabase();
 
 // CORS configuration
 const corsOptions = {
-  origin: '*',
+  origin: ['http://localhost:5173'],
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type, Authorization',
   credentials: true,
@@ -52,7 +52,7 @@ app.use('/supervisor', supervisorRoutes);
 
 
 // Start the server on the specified port
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
