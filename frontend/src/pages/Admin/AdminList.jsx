@@ -1,148 +1,111 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { server } from '../../server';
 import toast, { Toaster } from 'react-hot-toast';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Import the eye icons
-
+import { Link } from 'react-router-dom';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { AdminContext } from '../../context/AdminApis';
 
 export default function AdminList({ userData }) {
-
-  const navigate = useNavigate();
+  const { getAdmins, registerAdmin, deleteAdmin, registerAdminFromFile } =
+    useContext(AdminContext);
 
   const [admins, setAdmins] = useState([]);
-  const [selectedAdmin, setSelectedAdmin] = useState(null); // State to hold the selected admin for editing
-  const [showModal, setShowModal] = useState(false); // State to control modal visibility
-  const [isAdding, setIsAdding] = useState(false); // State to track if the modal is for adding or editing
-  const [password, setPassword] = useState(''); // State for password when adding a new admin
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-  console.log("userdata is ", userData)
-  // Fetch admin data
-  const getAdmin = async () => {
-    try {
-      const res = await fetch(`${server}/admin/admins`, {
-        method: 'GET',
-      });
-      const json = await res.json();
-      setAdmins(json.admin); // Assuming the response contains an 'admins' array
-    } catch (error) {
-      console.error('Error fetching admins:', error);
-    }
-  };
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const adminsData = await getAdmins();
+        setAdmins(adminsData.admin);
+      } catch (error) {
+        console.error('Error fetching admins:', error);
+      }
+    };
+    fetchAdmins();
+  }, [getAdmins]);
 
   const handleDelete = async (id) => {
-    const confirm = window.confirm("Are you sure you want to delete this admin?");
-    if (confirm) {
-      try {
-        const res = await fetch(`${server}/admin/delete/${id}`, {
-          method: 'DELETE', // Ensure you specify the DELETE method
-        });
-        const json = await res.json();
-        console.log("delete response: ", json);
-
-        if (json.success) {
-          // If deletion is successful, update the state to remove the admin from the list
-          setAdmins((prevAdmins) => prevAdmins.filter(admin => admin._id !== id));
-          toast.success('Admin deleted successfully');
-        } else {
-          toast.error(json.message || "Failed to delete the admin.");
-        }
-      } catch (error) {
-        console.error('Error deleting admin:', error);
-      }
+    const response = await deleteAdmin(id);
+    if (response.success) {
+      setAdmins((prev) => prev.filter((admin) => admin._id !== id));
+      toast.success('Admin deleted successfully');
+    } else {
+      toast.error(response.message || 'Failed to delete the admin.');
     }
   };
 
   const handleRegister = async (e) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
 
-    // Include password in selectedAdmin when adding a new admin
     const newAdminData = {
       ...selectedAdmin,
-      password, // Add the password field here
+      password,
     };
-
-    try {
-      const res = await fetch(`${server}/admin/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newAdminData), // Send the new admin data including password
-      });
-      const json = await res.json();
-      console.log("json is ", json)
-      if (json.success) {
-        setAdmins((prevAdmins) => [...prevAdmins, json.newAdmin]); // Update the state with the new admin
-        toast.success('Admin added successfully');
-        closeModal(); // Close the modal after successful addition
-      } else {
-        toast.error(json.message || "Failed to add admin.");
-      }
-    } catch (error) {
-      console.error('Error adding admin:', error);
+    const response = await registerAdmin(newAdminData);
+    if (response.success) {
+      setAdmins((prev) => [...prev, response.newAdmin]);
+      toast.success('Admin added successfully');
+      closeModal();
+    } else {
+      toast.error(response.message || 'Failed to add admin.');
     }
   };
 
-  useEffect(() => {
-    getAdmin();
-  }, []);
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-
-  // Open modal for adding admin
-  const handleAddClick = () => {
-    setSelectedAdmin({ fname: '', lname: '', email: '', username: '' }); // Reset fields for new admin
-    setPassword(''); // Reset password field
-    setShowModal(true); // Open modal
-    setIsAdding(true); // Set modal state to add
+    try {
+      const response = await registerAdminFromFile(file);
+      console.log("response is ", response)
+      if (response.success) {
+        setAdmins((prev) => [...prev, ...response.newAdmins]);
+        toast.success('Admins registered successfully from file.');
+      } else {
+        toast.error(response.message || 'Failed to register admins from file.');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Error processing file.');
+    }
   };
 
-  // Close modal
+  const handleAddClick = () => {
+    setSelectedAdmin({ fname: '', lname: '', email: '', username: '' });
+    setPassword('');
+    setShowModal(true);
+    setIsAdding(true);
+  };
+
   const closeModal = () => {
     setShowModal(false);
     setSelectedAdmin(null);
-    setPassword(''); // Reset password when closing the modal
+    setPassword('');
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target; // Destructure name and value from the target
-
-    let newValue = value;
-
-    // For fname and lname, allow spaces
-    if (name === 'fname' || name === 'lname') {
-      // Remove leading spaces
-      newValue = newValue.replace(/^\s+/, '');
-
-      // Allow only one space after input
-      if (newValue.includes('  ')) {
-        newValue = newValue.replace(/\s{2,}/g, ' '); // Replace multiple spaces with a single space
-      }
-    } else if (name === 'email' || name === 'username') {
-      // Remove spaces for email and username; prevent space input
-      newValue = newValue.replace(/\s+/g, ''); // Remove all spaces
-    }
-
-    // Update the state based on the field being edited
-    setSelectedAdmin((prevAdmin) => ({
-      ...prevAdmin,
-      [name]: newValue, // Use the name directly for state update
+    const { name, value } = e.target;
+    setSelectedAdmin((prev) => ({
+      ...prev,
+      [name]:
+        name === 'fname' || name === 'lname'
+          ? value.trimStart().replace(/\s{2,}/g, ' ')
+          : value.trim(),
     }));
   };
 
-
-  // Update password state when the password input changes
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
-
   const handlePasswordChange = (e) => {
-    let newValue = e.target.value.trim(); // Trim spaces directly here
-    newValue = newValue.replace(/\s{2,}/g, ' '); // Allow only one space after a word
-    setPassword(newValue);
+    setPassword(e.target.value.trimStart().replace(/\s{2,}/g, ' '));
   };
-
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-semibold text-center mb-6">Admin List</h1>
+      <Toaster />
+
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white shadow-md rounded-lg">
           <thead className="bg-gray-800 text-white">
@@ -150,7 +113,9 @@ export default function AdminList({ userData }) {
               <th className="py-3 px-6 text-left">Name</th>
               <th className="py-3 px-6 text-left">Email</th>
               <th className="py-3 px-6 text-left">Username</th>
-              {(userData?.superAdmin || userData?.write_permission) && <th className="py-3 px-6 text-center">Actions</th>}
+              {(userData?.superAdmin || userData?.write_permission) && (
+                <th className="py-3 px-6 text-center">Actions</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -159,140 +124,112 @@ export default function AdminList({ userData }) {
                 <td className="py-3 px-6">{`${admin.fname} ${admin.lname}`}</td>
                 <td className="py-3 px-6">{admin.email}</td>
                 <td className="py-3 px-6">{admin.username}</td>
-                {(userData?.superAdmin || userData?.write_permission) &&
+                {(userData?.superAdmin || userData?.write_permission) && (
                   <td className="py-3 px-6 text-center flex justify-center space-x-4">
-                    <Link to={`/admin/edit-admin-profile/${admin._id}`}
+                    <Link
+                      to={`/admin/edit-admin-profile/${admin._id}`}
                       className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                     >
                       Edit
                     </Link>
-                    <button onClick={() => handleDelete(admin._id)} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    <button
+                      onClick={() => handleDelete(admin._id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    >
                       Delete
                     </button>
-                  </td>}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <button
-        className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 fixed bottom-8 right-8"
-        onClick={handleAddClick} // Call the function to open the add modal
-      >
-        Add
-      </button>
 
-      {/* Modal */}
+      <div className="mt-4 flex justify-between items-center">
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          onClick={handleAddClick}
+        >
+          Add Admin
+        </button>
+        <label
+          htmlFor="fileUpload"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer"
+        >
+          Upload Excel
+          <input
+            type="file"
+            id="fileUpload"
+            className="hidden"
+            accept=".xlsx, .xls"
+            onChange={handleFileUpload}
+          />
+        </label>
+      </div>
+
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-md p-6 relative">
-            <h2 className="text-xl font-semibold mb-4 text-center">Add Admin</h2>
-
+            <h2 className="text-xl font-semibold mb-4 text-center">{isAdding ? 'Add Admin' : 'Edit Admin'}</h2>
             <form onSubmit={handleRegister}>
-              <div className="mb-4">
-                <label htmlFor="fname" className="block text-sm font-medium text-gray-700">
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  id="fname"
-                  name="fname"
-                  value={selectedAdmin.fname}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100"
-                  required // Make this field required
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="lname" className="block text-sm font-medium text-gray-700">
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  id="lname"
-                  name="lname"
-                  value={selectedAdmin.lname}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100"
-                  required // Make this field required
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={selectedAdmin.email}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100"
-                  required // Make this field required
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={selectedAdmin.username}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100"
-                  required // Make this field required
-                />
-              </div>
+              {['fname', 'lname', 'email', 'username'].map((field) => (
+                <div className="mb-4" key={field}>
+                  <label htmlFor={field} className="block text-sm font-medium text-gray-700">
+                    {field.charAt(0).toUpperCase() + field.slice(1).replace('_', ' ')}
+                  </label>
+                  <input
+                    type="text"
+                    id={field}
+                    name={field}
+                    value={selectedAdmin?.[field] || ''}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+              ))}
               <div className="mb-4">
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
                 <div className="relative">
                   <input
-                    type={showPassword ? 'text' : 'password'} // Toggle between text and password
+                    type={showPassword ? 'text' : 'password'}
                     id="password"
                     value={password}
                     onChange={handlePasswordChange}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100 pr-10" // Add padding to the right for the icon
-                    required // Make this field required
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md pr-10"
+                    required
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 flex items-center pr-3"
-                    onClick={() => setShowPassword((prev) => !prev)} // Toggle the password visibility
+                    className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-600"
+                    onClick={() => setShowPassword((prev) => !prev)}
                   >
-                    {showPassword ? (
-                      <FaEyeSlash className="text-gray-500" />
-                    ) : (
-                      <FaEye className="text-gray-500" />
-                    )}
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
               </div>
-
-              <div className="flex justify-between">
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  Register Admin
-                </button>
+              <div className="flex justify-end space-x-4">
                 <button
                   type="button"
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
                   onClick={closeModal}
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                >
+                  {isAdding ? 'Add' : 'Save'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      <Toaster />
     </div>
   );
 }

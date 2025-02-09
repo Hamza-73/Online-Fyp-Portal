@@ -8,6 +8,29 @@ export const StudentContext = createContext();
 // AdminProvider component to wrap your app
 export function StudentApis({ children }) {
 
+    const registerStudentFromFile = async (file) => {
+        try {
+          const formData = new FormData();
+          formData.append('excelFile', file);
+    
+          const response = await fetch(`${server}/student/register-from-file`, {
+            method: 'POST',
+            body: formData,
+          });
+    
+          const json = await response.json();
+    
+          if (!response.ok) {
+            throw new Error(json.message || 'Failed to register students from file.');
+          }
+    
+          return json;
+        } catch (error) {
+          console.error('Error in registerFromFile:', error.message);
+          throw error;
+        }
+      };
+
     const editStudentProfile = async (id, data) => {
         try {
             const res = await fetch(`${server}/student/edit-profile/${id}`, {
@@ -128,9 +151,24 @@ export function StudentApis({ children }) {
         } catch (error) {
             console.error('Error getting :', error);
             return { success: false, message: 'group not found' };            
-        }
-        
+        } 
       }
+
+      const uploadDocument = async (formData) => {
+
+        try {
+            const response = await fetch(`${server}/student/upload-document`, {
+                method: 'POST',
+                credentials:"include",
+                body: formData
+            });
+            const data = await response.json();
+            console.log("response in uplading file is ", data)
+            return data;
+        } catch (error) {
+            setMessage('Error uploading document');
+        }
+    };
 
     return (
         <StudentContext.Provider
@@ -142,7 +180,9 @@ export function StudentApis({ children }) {
                 sendProjectRequest,
                 getSupervisorDetail,
                 fetchMyGroup,
-                requestToJoinGroup
+                requestToJoinGroup,
+                registerStudentFromFile,
+                uploadDocument
             }}
         >
             {children}

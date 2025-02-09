@@ -96,6 +96,9 @@ module.exports.registerFromFile = async (req, res) => {
         const uniqueEmails = new Set();
         const uniqueUsernames = new Set();
 
+        // Array to store newly created admins
+        const newAdmins = [];
+
         // Iterate over the data to validate and process each user
         for (let i = 0; i < excelData.length; i++) {
             const user = excelData[i];
@@ -154,9 +157,12 @@ module.exports.registerFromFile = async (req, res) => {
 
             // Save user to the database
             await newUser.save();
+
+            // Add the newly created user to the array
+            newAdmins.push(newUser);
         }
 
-        return res.json({ success: true, message: 'File uploaded and users registered successfully.' });
+        return res.json({ success: true, message: 'File uploaded and users registered successfully.', newAdmins });
     } catch (error) {
         console.error('Error occurred while processing data:', error);
         return res.status(400).json({ success: false, message: error.message });

@@ -8,23 +8,45 @@ export const SupervisorContext = createContext();
 // AdminProvider component to wrap your app
 export function SupervisorApis({ children }) {
 
-
-    const deleteSupervisor = async (id)=>{
+    const registerSupervisorFromFile = async (file) => {
         try {
-            const res = await fetch(`${server}/supervisor/delete-supervisor/${id}`,{
-                method:"DELETE",
-                credentials:"include"
+            const formData = new FormData();
+            formData.append('excelFile', file);
+
+            const response = await fetch(`${server}/supervisor/register-from-file`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            const json = await response.json();
+
+            if (!response.ok) {
+                throw new Error(json.message || 'Failed to register students from file.');
+            }
+
+            return json;
+        } catch (error) {
+            console.error('Error in registerFromFile:', error.message);
+            throw error;
+        }
+    };
+
+    const deleteSupervisor = async (id) => {
+        try {
+            const res = await fetch(`${server}/supervisor/delete-supervisor/${id}`, {
+                method: "DELETE",
+                credentials: "include"
             });
             const result = await res.json();
             return result;
         } catch (error) {
-            console.log("error in deleting student", error)            
+            console.log("error in deleting student", error)
         }
     }
 
-    const getSupervisorProfile = async (id)=>{
+    const getSupervisorProfile = async (id) => {
         try {
-            const res = await fetch(`${server}/supervisor/get-profile/${id}`,{
+            const res = await fetch(`${server}/supervisor/get-profile/${id}`, {
                 method: 'GET',
                 credentials: 'include',
             });
@@ -37,14 +59,14 @@ export function SupervisorApis({ children }) {
         }
     }
 
-    const editSupervisorProfile = async (id, data)=>{
+    const editSupervisorProfile = async (id, data) => {
         try {
-            const res = await fetch(`${server}/supervisor/edit-profile/${id}`,{
+            const res = await fetch(`${server}/supervisor/edit-profile/${id}`, {
                 method: 'PUT',
-                headers:{
+                headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials:"include",
+                credentials: "include",
                 body: JSON.stringify(data)
             });
             const result = await res.json();
@@ -65,9 +87,9 @@ export function SupervisorApis({ children }) {
         }
     };
 
-    const getProfile = async ()=>{
+    const getProfile = async () => {
         try {
-            const res = await fetch(`${server}/supervisor/get-profile`,{
+            const res = await fetch(`${server}/supervisor/get-profile`, {
                 method: 'GET',
                 credentials: 'include',
             });
@@ -80,9 +102,9 @@ export function SupervisorApis({ children }) {
         }
     }
 
-    const getMyGroups = async ()=>{
+    const getMyGroups = async () => {
         try {
-            const res = await fetch(`${server}/supervisor/get-my-groups`,{
+            const res = await fetch(`${server}/supervisor/get-my-groups`, {
                 method: 'GET',
                 credentials: 'include',
             });
@@ -95,9 +117,9 @@ export function SupervisorApis({ children }) {
         }
     }
 
-    const getPropsalRequests = async ()=>{
+    const getPropsalRequests = async () => {
         try {
-            const res = await fetch(`http://localhost:4000/supervisor/view-requests`,{
+            const res = await fetch(`http://localhost:4000/supervisor/view-requests`, {
                 method: 'GET',
                 credentials: 'include',
             });
@@ -110,32 +132,66 @@ export function SupervisorApis({ children }) {
         }
     }
 
-    const acceptProposalRequest = async (requestId) =>{
+    const acceptProposalRequest = async (requestId) => {
         try {
-            const response = await fetch(`${server}/supervisor/accept-request/${requestId}`,{
+            const response = await fetch(`${server}/supervisor/accept-request/${requestId}`, {
                 method: 'POST',
                 credentials: 'include',
             });
             const result = await response.json();
             return result;
         } catch (error) {
-            console.log("error in accepting request", error)            
+            console.log("error in accepting request", error)
         }
     }
 
-    const rejectProposalRequest = async (requestId) =>{
+    const rejectProposalRequest = async (requestId) => {
         try {
-            const response = await fetch(`${server}/supervisor/reject-request/${requestId}`,{
+            const response = await fetch(`${server}/supervisor/reject-request/${requestId}`, {
                 method: 'POST',
                 credentials: 'include',
             });
             const result = await response.json();
             return result;
         } catch (error) {
-            console.log("error in accepting request", error)            
+            console.log("error in accepting request", error)
         }
     }
-    
+
+    const reviewDocument = async (groupId, index, review) => {
+        try {
+            const response = await fetch(`${server}/supervisor/review-document/${groupId}/${index}`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ review })
+            });
+            const result = await response.json();
+            return result;
+        } catch (error) {
+            console.log("error in accepting request", error)
+        }
+    }
+
+    const setDeadline = async (submissionType, deadlineDate) => {
+        try {
+            const response = await fetch(`${server}/supervisor/set-deadline`,{
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ submissionType, deadlineDate })
+            });
+            const result = response.json();
+            return result;
+        } catch (error) {
+            console.log("error in setting deadline ", error)
+        }
+    }
+
     return (
         <SupervisorContext.Provider
             value={{
@@ -147,7 +203,10 @@ export function SupervisorApis({ children }) {
                 getPropsalRequests,
                 acceptProposalRequest,
                 rejectProposalRequest,
-                getMyGroups
+                getMyGroups,
+                registerSupervisorFromFile,
+                reviewDocument,
+                setDeadline
             }}
         >
             {children}

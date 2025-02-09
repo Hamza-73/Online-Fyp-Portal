@@ -68,11 +68,11 @@ const studentSchema = new Schema({
         hodMarks: { type: Number, default: 0 },
     },
     isGroupMember: { type: Boolean, default: false },
-    deadlines: {
-        proposalSubmission: { type: Date },
-        documentationSubmission: { type: Date },
-        projectSubmission: { type: Date },
-    },
+    // deadlines: {
+    //     proposalSubmission: { type: Date },
+    //     documentationSubmission: { type: Date },
+    //     projectSubmission: { type: Date },
+    // },
     submissions: {
         proposalSubmitted: { type: Date },
         documentationSubmitted: { type: Date },

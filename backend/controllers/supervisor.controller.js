@@ -2,9 +2,12 @@ const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const Student = require('../models/student.model.js');
 const Supervisor = require('../models/supervisor.model.js');
-const Admin = require('../models/admin.model.js'); // Assuming you have a User model
-const Group = require('../models/group.model.js'); // Assuming you have a User model
-const Project = require('../models/project.model.js'); // Assuming you have a User model
+const Admin = require('../models/admin.model.js');
+const Group = require('../models/group.model.js');
+const Project = require('../models/project.model.js');
+const Deadline = require('../models/deadline.model.js');
+const Announcement = require('../models/announcement.model.js');
+const XLSX = require('xlsx');
 
 module.exports.getSupervisors = async (req, res) => {
   try {
@@ -66,6 +69,115 @@ module.exports.getProfile = async (req, res) => {
   } catch (error) {
     console.error("Error fetching supervisor profile:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+
+module.exports.registerFromFile = async (req, res) => {
+  if (!req.files || !req.files.excelFile) {
+    return res.status(400).json({ success: false, message: 'No files were uploaded.' });
+  }
+
+  const excelFile = req.files.excelFile;
+
+  try {
+    // Read the file directly from the buffer (excelFile.data)
+    const workbook = XLSX.read(excelFile.data, { type: 'buffer', cellDates: true });
+    const sheetName = workbook.SheetNames[0];
+    const excelData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    // To check for unique email and username
+    const uniqueEmails = new Set();
+    const uniqueUsernames = new Set();
+
+    // Array to store newly created supervisors
+    const newSupervisors = [];
+
+    // Iterate over the data to validate and process each supervisor
+    for (let i = 0; i < excelData.length; i++) {
+      const supervisor = excelData[i];
+
+      // Validate name
+      if (!supervisor.name || supervisor.name.length < 3) {
+        return res.status(400).json({ success: false, message: `Name must be at least 3 characters for supervisor at row ${i + 1}` });
+      }
+
+      // Validate username
+      if (!supervisor.username || supervisor.username.length < 3) {
+        return res.status(400).json({ success: false, message: `Username must be at least 3 characters for supervisor at row ${i + 1}` });
+      }
+
+      // Check for duplicate username in the file
+      if (uniqueUsernames.has(supervisor.username)) {
+        return res.status(400).json({ success: false, message: `Duplicate username found in row ${i + 1}: ${supervisor.username}` });
+      }
+      uniqueUsernames.add(supervisor.username);
+
+      // Validate email format using regex
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!supervisor.email || !emailRegex.test(supervisor.email)) {
+        return res.status(400).json({ success: false, message: `Invalid email format for supervisor at row ${i + 1}` });
+      }
+
+      // Check for duplicate email in the file
+      if (uniqueEmails.has(supervisor.email)) {
+        return res.status(400).json({ success: false, message: `Duplicate email found in row ${i + 1}: ${supervisor.email}` });
+      }
+      uniqueEmails.add(supervisor.email);
+
+      // Validate CNIC format (13 digits)
+      if (!supervisor.cnic || !/^\d{13}$/.test(supervisor.cnic.toString())) {
+        return res.status(400).json({ success: false, message: `CNIC must be exactly 13 digits for supervisor at row ${i + 1}` });
+      }
+
+      // Validate password length
+      if (!supervisor.password || supervisor.password.length < 6) {
+        return res.status(400).json({ success: false, message: `Password must be at least 6 characters for supervisor at row ${i + 1}` });
+      }
+
+      // Validate designation and department
+      if (!supervisor.designation || !supervisor.department) {
+        return res.status(400).json({ success: false, message: `Designation and department are required for supervisor at row ${i + 1}` });
+      }
+
+      // Check if the supervisor already exists in the database
+      const isValid = await Supervisor.findOne({
+        $or: [{ email: supervisor.email }, { username: supervisor.username }]
+      });
+      if (isValid) {
+        return res.status(400).json({ success: false, message: `Supervisor with email/username already exists in the database at row ${i + 1}.` });
+      }
+
+      // Hash the password before storing it in the database
+      // const salt = await bcrypt.genSalt(10);
+      // const hashedPassword = await bcrypt.hash(supervisor.cnic.toString(), salt);
+
+      // Prepare the supervisor object
+      const newSupervisor = new Supervisor({
+        name: supervisor.name,
+        username: supervisor.username,
+        email: supervisor.email,
+        cnic: supervisor.cnic,
+        designation: supervisor.designation,
+        department: supervisor.department,
+        slots: supervisor.slots || 0,
+        password: supervisor.cnic,
+        isCommittee: supervisor.isCommittee || false,
+        notifications: supervisor.notifications || { seen: [], unseen: [] },
+        myIdeas: supervisor.myIdeas || [],
+      });
+
+      // Save supervisor to the database
+      await newSupervisor.save();
+
+      // Add the newly created supervisor to the array
+      newSupervisors.push(newSupervisor);
+    }
+
+    return res.json({ success: true, message: 'File uploaded and supervisors registered successfully.', newSupervisors });
+  } catch (error) {
+    console.error('Error occurred while processing data:', error);
+    return res.status(400).json({ success: false, message: error.message });
   }
 };
 
@@ -397,13 +509,13 @@ module.exports.rejectRequest = async (req, res) => {
 module.exports.getMyGroups = async (req, res) => {
   try {
     const groups = await Supervisor.findById(req.user.id)
-    .populate({
+      .populate({
         path: 'groups',
         populate: {
-            path: 'students', // This will populate the students in each group
-            model: 'Student'  // Ensure the 'Student' model is correctly referenced
+          path: 'students', // This will populate the students in each group
+          model: 'Student'  // Ensure the 'Student' model is correctly referenced
         }
-    });
+      });
 
 
     if (groups.groups || groups.groups.length > 0) return res.status(200).json({ success: true, groups: groups.groups });
@@ -414,3 +526,193 @@ module.exports.getMyGroups = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 }
+
+module.exports.makeAnncouncement = async (req, res) => {
+  try {
+    const { title, content } = req.body;
+    const supervisor = await Supervisor.findById(req.user.id);
+    if (!supervisor.isCommittee) return res.status(505).json({ success: false, message: "Only Committee Members can make announcement" });
+
+    const announcement = new Announcement({ title, content });
+    await announcement.save();
+    return res.status(200).json({ success: true, message: 'Announcement made successfully' });
+
+  } catch (error) {
+    console.error('Error making announcement :', error);
+    res.status(500).json({ success: false, message: 'Server Error' });
+  }
+};
+
+module.exports.reviewDocument = async (req, res) => {
+  try {
+    const { groupId, index } = req.params;
+    const { review } = req.body;
+    const supervisor = await Supervisor.findById(req.user.id);
+    if (!supervisor) {
+      return res.status(404).json({ message: 'Supervisor not found' });
+    }
+
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    if (!group.docs[index]) {
+      return res.json({ message: "invalid index" })
+    }
+    group.docs[index].review = review;
+    group.students.map(async stu => {
+      const studentObj = await Student.findById(stu);
+      studentObj.notifications.unseen.push({
+        type: "Important", message: `Reviews has been given by the supervisor to your document`
+      });
+      await studentObj.save();
+    })
+    await group.save();
+    console.log("revis is ", group)
+
+    return res.json({ success: true, message: `Reviews Given Sucessfully` });
+
+  } catch (error) {
+    console.error('error in giving reviw', error);
+    return res.json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports.setDeadline = async (req, res) => {
+  try {
+    const { submissionType, deadlineDate } = req.body;
+
+    const supervisor = await Supervisor.findById(req.user.id);
+
+    if (!supervisor || !supervisor.isCommittee) {
+      return res.status(500).json({ success: false, message: "Only A Committee Member can Set Deadline" });
+    }
+
+    if (!["proposal", "documentation", "finalReport"].includes(submissionType)) {
+      return res.status(400).json({ message: "Invalid submission type" });
+    }
+
+    let deadline = await Deadline.findOne() || new Deadline({ deadlines: {} });
+
+    const isDeadlineValid = (type, requiredType) => {
+      if (requiredType && !deadline.deadlines[requiredType]) {
+        return res.status(400).json({ message: `${requiredType.charAt(0).toUpperCase() + requiredType.slice(1)} deadline must be set first` });
+      }
+      if (deadline.deadlines[type] && new Date(deadline.deadlines[requiredType]) > new Date()) {
+        return res.status(400).json({ message: `${requiredType.charAt(0).toUpperCase() + requiredType.slice(1)} deadline has not passed yet` });
+      }
+      return true;
+    };
+
+    const extendOrSetDeadline = (type) => {
+      const existingDeadline = deadline.deadlines[type];
+
+      if (existingDeadline && new Date(existingDeadline) > new Date()) {
+        return res.status(400).json({ message: `${type.charAt(0).toUpperCase() + type.slice(1)} deadline is not expired yet, cannot be extended` });
+      }
+
+      if (deadline.deadlines[type]) {
+        deadline.deadlines[type] = deadlineDate;
+      } else {
+        deadline.deadlines[type] = deadlineDate;
+      }
+    };
+
+    const submissionTypes = {
+      "proposal": () => {
+        if (deadline.deadlines.proposal && new Date(deadline.deadlines.proposal) > new Date()) {
+          return res.status(400).json({ message: "Proposal deadline is already set and has not passed yet" });
+        }
+        deadline.deadlines.proposal = deadlineDate;
+      },
+      "documentation": () => {
+        if (!isDeadlineValid("documentation", "proposal")) return;
+        if (deadline.deadlines.documentation && new Date(deadline.deadlines.documentation) > new Date()) {
+          return res.status(400).json({ message: "Documentation deadline is already set and has not passed yet" });
+        }
+
+        if (deadline.deadlines.proposal && new Date(deadline.deadlines.proposal) > new Date()) {
+          return res.status(400).json({ message: "Proposal deadline has not passed yet, cannot set Documentation deadline" });
+        }
+
+        extendOrSetDeadline("documentation");
+      },
+      "finalReport": () => {
+        if (!isDeadlineValid("finalReport", "documentation")) return;
+        if (deadline.deadlines.finalReport && new Date(deadline.deadlines.finalReport) > new Date()) {
+          return res.status(400).json({ message: "Final Report deadline is already set and has not passed yet" });
+        }
+
+        if (deadline.deadlines.documentation && new Date(deadline.deadlines.documentation) > new Date()) {
+          return res.status(400).json({ message: "Documentation deadline has not passed yet, cannot set Final Report deadline" });
+        }
+
+        extendOrSetDeadline("finalReport");
+      }
+    };
+
+    if (submissionTypes[submissionType]) {
+      submissionTypes[submissionType]();
+    } else {
+      return res.status(400).json({ message: "Invalid submission type" });
+    }
+
+    deadline.supervisor = req.user.id;
+
+    await deadline.save();
+
+    // **Create an Announcement**
+    const announcement = new Announcement({
+      title: `Deadline Announced for ${submissionType.charAt(0).toUpperCase() + submissionType.slice(1)}`,
+      content: `The deadline for ${submissionType} has been set to ${new Date(deadlineDate).toLocaleString()}. Please make sure to submit your work before this deadline.`,
+    });
+
+    await announcement.save();
+
+    const notifyUsers = async () => {
+      // send notifications to students
+      const students = await Student.find({}).populate("group");
+      if (students && students.length > 0) {
+        students.forEach(async (student) => {
+          student.notifications.unseen.push({
+            message: `Deadline Announced for ${submissionType.charAt(0).toUpperCase() + submissionType.slice(1)} ${new Date(deadlineDate).toLocaleString()}`,
+            type: "Important"
+          });
+    
+          if (student.group) {
+            await Group.findByIdAndUpdate(student.group._id, { $set: { deadlines: deadline._id } });
+          }
+    
+          await student.save();
+        });
+      }
+    
+      // notify supervisors
+      const supervisors = await Supervisor.find({});
+      if (supervisors && supervisors.length > 0) {
+        supervisors.forEach(async (supervisor) => {
+          supervisor.notifications.unseen.push({
+            message: `Deadline Announced for ${submissionType.charAt(0).toUpperCase() + submissionType.slice(1)} ${new Date(deadlineDate).toLocaleString()}`,
+            type: "Important"
+          });
+          supervisor.deadlines.push(deadline._id);
+          await supervisor.save();
+        });
+      }
+    };    
+
+    notifyUsers();
+
+    res.status(200).json({
+      success: true,
+      message: `${submissionType.charAt(0).toUpperCase() + submissionType.slice(1)} deadline set successfully`,
+      deadline,
+      announcement
+    });
+
+  } catch (error) {
+    console.log("error in setting deadline ", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};

@@ -5,21 +5,26 @@ dotenv.config({ path: path.join(__dirname, '..', 'config', '.env') });
 
 const authenticateToken = (req, res, next) => {
     try {
-        // Check if the token cookie exists
-        const token = JSON.parse(req.cookies.auth).token;
-        // console.log("token is ", token)
+        if (!req.cookies.auth) {
+            return res.status(401).json({ message: 'No auth cookie found', success: false });
+        }
+
+        let tokenData;
+        try {
+            tokenData = JSON.parse(req.cookies.auth);
+        } catch (err) {
+            return res.status(400).json({ message: 'Malformed auth cookie', success: false });
+        }
+
+        const token = tokenData.token;
+        // console.log("Extracted Token:", token);
 
         if (!token) {
             return res.status(401).json({ message: 'Authentication token missing', success: false });
         }
 
-        // Verify the token
         const decoded = jwt.verify(token, process.env.JWT_SECRET || "hamza1");
-
-        // Attach the decoded user data to the request object
         req.user = decoded;
-
-        // Proceed to the next middleware or route handler
         next();
     } catch (error) {
         console.error('Token verification failed:', error.message);

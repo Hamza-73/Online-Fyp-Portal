@@ -30,7 +30,7 @@ export default function Login({ user, onLogin }) {
           if (onLogin) {
             onLogin();
           }
-          navigate(`/${user}/dashboard`);
+          navigate(`/${user}/announcements`);
         }, 1500);
       } else {
         toast.error(response.message);

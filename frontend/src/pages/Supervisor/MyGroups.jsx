@@ -8,7 +8,6 @@ export default function MyGroups() {
   useEffect(() => {
     const fetchGroups = async () => {
       const result = await getMyGroups();
-      console.log("result is- ", result);
       if (result?.success) {
         setGroups(result.groups);
       }
@@ -23,8 +22,9 @@ export default function MyGroups() {
       </h1>
       {groups ? (
         <div className="flex flex-wrap justify-center gap-8">
-          {groups.map((group) => (
-            <div
+          {groups.map((group,index) => (
+            <a
+              href={`/supervisor/my-groups/${index}`}
               key={group._id}
               className="bg-white rounded-xl cursor-pointer shadow-lg p-6 w-80 hover:scale-105 transition-transform duration-300"
             >
@@ -51,7 +51,7 @@ export default function MyGroups() {
                   <li className="text-gray-500 italic">No students</li>
                 )}
               </ul>
-            </div>
+            </a>
           ))}
         </div>
       ) : (

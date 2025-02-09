@@ -1,8 +1,9 @@
 const express = require('express');
 const authenticateToken = require('../middleware/auth');
-const { getStudents, getProfile, editStudentProfile, deleteStudent, profile, sendProjectRequest, getSupervisorDetail, myGroup, requestToJoinGroup } = require('../controllers/student.controller');
+const { getStudents, getProfile, editStudentProfile, deleteStudent, profile, sendProjectRequest, getSupervisorDetail, myGroup, requestToJoinGroup, registerFromFile, uploadDocument } = require('../controllers/student.controller');
 const router = express.Router();
 
+router.post('/register-from-file',  registerFromFile);
 router.get('/students',  getStudents);
 router.get('/get-profile/:id', authenticateToken,  getProfile);
 router.get('/get-profile', authenticateToken, profile);
@@ -12,5 +13,6 @@ router.post('/send-project-request/:supervisorId', authenticateToken,  sendProje
 router.post('/request-to-join-group/:groupId', authenticateToken,  requestToJoinGroup);
 router.get('/get-supervisor-detail/:supervisorId',  getSupervisorDetail);
 router.get('/my-group', authenticateToken,  myGroup);
+router.post('/upload-document', authenticateToken,  uploadDocument);
 
 module.exports = router;

@@ -20,6 +20,7 @@ const supervisorSchema = new Schema({
     designation: { type: String, required: true },
     department: { type: String, required: true },
     slots: { type: Number, required: true, default: 0 },
+    isCommittee: { type: Boolean, required: true, default: false },
     password: { type: String, required: true },
     groups: [{ type: Schema.Types.ObjectId, ref: 'Group' }], // Store group IDs here
     projectRequest: [
@@ -34,9 +35,10 @@ const supervisorSchema = new Schema({
         seen: { type: Array, default: [] },
         unseen: { type: Array, default: [] }
     },
+    deadlines: [{ type: mongoose.Schema.Types.ObjectId, ref: "Deadline" }] ,
     myIdeas: [{
         projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
-        active:{type:Boolean,default:true},
+        active: { type: Boolean, default: true },
         createdAt: { type: Date, default: Date.now }
     }],
     // meeting: [{ type: Schema.Types.ObjectId, ref: 'Meeting' }],

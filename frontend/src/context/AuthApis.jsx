@@ -121,6 +121,18 @@ export function AuthApis({ children }) {
         }
     }
 
+    const getAnnouncement = async () => {
+        try {
+            const res = await fetch(`${server}/auth/get-announcement`, {
+                method: 'GET',
+            });
+            const result = await res.json();
+            return result;
+        } catch (error) {
+            console.log("error getting announcement ", error);
+        }
+    }
+
     return (
         <AuthContext.Provider
             value={{
@@ -130,7 +142,8 @@ export function AuthApis({ children }) {
                 getGroups,
                 getNotifications,
                 markSeenNotification,
-                removeNotification
+                removeNotification,
+                getAnnouncement
             }}
         >
             {children}

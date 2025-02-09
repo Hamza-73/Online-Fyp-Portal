@@ -5,6 +5,19 @@ const Supervisor = require('../models/supervisor.model.js');
 const Admin = require('../models/admin.model.js'); // Assuming you have a User model
 const Project = require('../models/project.model.js');
 const Group = require('../models/group.model.js');
+const XLSX = require('xlsx');
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer')
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/')
+    },
+    filename: function (req, file, cb) {
+        console.log(file)
+        cb(null, file.originalname)
+    }
+})
 
 module.exports.getStudents = async (req, res) => {
     try {
@@ -13,7 +26,119 @@ module.exports.getStudents = async (req, res) => {
     } catch (error) {
 
     }
-}
+};
+
+module.exports.registerFromFile = async (req, res) => {
+    if (!req.files || !req.files.excelFile) {
+        return res.status(400).json({ success: false, message: 'No files were uploaded.' });
+    }
+
+    const excelFile = req.files.excelFile;
+
+    try {
+        // Read the file directly from the buffer (excelFile.data)
+        const workbook = XLSX.read(excelFile.data, { type: 'buffer', cellDates: true });
+        const sheetName = workbook.SheetNames[0];
+        console.log("Sheet names:", workbook.SheetNames);
+        const sheet = workbook.Sheets[sheetName];
+        console.log("Raw sheet data:", sheet);
+
+        const excelData = XLSX.utils.sheet_to_json(sheet);
+        console.log("Parsed excel data:", excelData);
+
+
+        // To check for unique email and rollNo
+        const uniqueEmails = new Set();
+        const uniqueRollNos = new Set();
+
+        // Array to store newly created students
+        const newStudents = [];
+
+        console.log("excel data is ", excelData)
+
+        // Iterate over the data to validate and process each student
+        for (let i = 0; i < excelData.length; i++) {
+            const student = excelData[i];
+
+            // Validate name
+            if (!student.name || student.name.length < 3) {
+                return res.status(400).json({ success: false, message: `Name must be at least 3 characters for student at row ${i + 1}` });
+            }
+
+            // Validate rollNo format
+            if (!student.rollNo || !/^\d{4}(-RE-R)?(-R)?-BSCS-\d{2}$/.test(student.rollNo)) {
+                return res.status(400).json({ success: false, message: `Invalid rollNo format for student at row ${i + 1}` });
+            }
+
+            // Check for duplicate rollNo in the file
+            if (uniqueRollNos.has(student.rollNo)) {
+                return res.status(400).json({ success: false, message: `Duplicate rollNo found in row ${i + 1}: ${student.rollNo}` });
+            }
+            uniqueRollNos.add(student.rollNo);
+
+            // Validate email format using regex
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!student.email || !emailRegex.test(student.email)) {
+                return res.status(400).json({ success: false, message: `Invalid email format for student at row ${i + 1}` });
+            }
+
+            // Check for duplicate email in the file
+            if (uniqueEmails.has(student.email)) {
+                return res.status(400).json({ success: false, message: `Duplicate email found in row ${i + 1}: ${student.email}` });
+            }
+            uniqueEmails.add(student.email);
+
+            // Validate batch format
+            if (!student.batch || !/^\d{4}-\d{4}$/.test(student.batch)) {
+                return res.status(400).json({ success: false, message: `Invalid batch format for student at row ${i + 1}` });
+            }
+
+            // Validate CNIC format
+            if (!student.cnic || !/^\d{13}$/.test(student.cnic.toString())) {
+                return res.status(400).json({ success: false, message: `CNIC must be exactly 13 digits for student at row ${i + 1}` });
+            }
+
+            // Check if the student already exists in the database
+            const isValid = await Student.findOne({
+                $or: [{ email: student.email }, { rollNo: student.rollNo }]
+            });
+            if (isValid) {
+                return res.status(400).json({ success: false, message: `Student with email/rollNo already exists in the database at row ${i + 1}.` });
+            }
+
+            // Hash the password before storing it in the database
+            // const salt = await bcrypt.genSalt(10);
+            // const hashedPassword = await bcrypt.hash(student.cnic.toString(), salt);
+
+            // Prepare the student object
+            const newStudent = new Student({
+                name: student.name,
+                rollNo: student.rollNo,
+                email: student.email,
+                father: student.father,
+                batch: student.batch,
+                semester: student.semester,
+                cnic: student.cnic,
+                password: student.cnic,
+                department: student.department,
+                notifications: student.notifications || { seen: [], unseen: [] },
+                marks: student.marks || { externalMarks: 0, internalMarks: 0, hodMarks: 0 },
+                requests: student.requests || { receivedRequests: [], pendingRequests: [], rejectedRequests: [] }
+            });
+
+            // Save student to the database
+            await newStudent.save();
+
+            // Add the newly created student to the array
+            newStudents.push(newStudent);
+        }
+
+        return res.json({ success: true, message: 'File uploaded and students registered successfully.', newStudents });
+    } catch (error) {
+        console.error('Error occurred while processing data:', error);
+        return res.status(400).json({ success: false, message: error.message });
+    }
+};
 
 module.exports.profile = async (req, res) => {
     try {
@@ -268,8 +393,8 @@ module.exports.requestToJoinGroup = async (req, res) => {
             return res.status(400).json({ success: false, message: "You're already in a Group" });
         }
 
-        if(student.requests.pendingRequests.length>=2){
-            return res.status(400).json({ success: false, message: `You can only send to 2 supervisors at a time`})
+        if (student.requests.pendingRequests.length >= 2) {
+            return res.status(400).json({ success: false, message: `You can only send to 2 supervisors at a time` })
         }
 
         // Find the group and its supervisor
@@ -300,9 +425,9 @@ module.exports.requestToJoinGroup = async (req, res) => {
         supervisor.projectRequest.push({ project: group.project, student: student._id });
 
         student.requests.pendingRequests.push(supervisor._id);
-        student.notifications.unseen.push({ 
-            type: 'Important', 
-            message: `You've sent a request to ${supervisor.name} to join the group: ${group.title}` 
+        student.notifications.unseen.push({
+            type: 'Important',
+            message: `You've sent a request to ${supervisor.name} to join the group: ${group.title}`
         });
 
         // Save changes
@@ -358,7 +483,7 @@ module.exports.getSupervisorDetail = async (req, res) => {
             message: 'Internal server error',
         });
     }
-}; 
+};
 
 module.exports.myGroup = async (req, res) => {
     try {
@@ -371,9 +496,10 @@ module.exports.myGroup = async (req, res) => {
         const student = await Student.findById(req.user.id).populate({
             path: 'group', // Populate the group field
             populate: [
-                { path: 'supervisor', select: 'name email department designation slots' }, // Populate supervisor details
-                { path: 'project', select: 'title description scope' }, // Populate project details
-                { path: 'students', select: 'name email rollNo batch semester department' }, // Populate student details (if needed)
+                { path: 'supervisor', select: 'name email department designation slots' }, 
+                { path: 'project', select: 'title description scope' }, 
+                { path: 'students', select: 'name email rollNo batch semester department' },
+                { path: 'deadlines' }, 
             ]
         });
 
@@ -391,5 +517,76 @@ module.exports.myGroup = async (req, res) => {
 
         // Send a generic server error message to the client
         res.status(500).json({ success: false, message: 'Server error, try refreshing or logging in again' });
+    }
+};
+
+module.exports.uploadDocument = async (req, res) => {
+    try {
+        const { comment, webLink } = req.body;
+        const student = await Student.findById(req.user.id);
+        if (!student) return res.status(404).json({ error: 'Student Not Found' });
+
+        const group = await Group.findById(student.group);
+        if (!group) return res.status(404).json({ success: false, message: 'Group Not Found' });
+
+        let docLink = "";
+
+        if (req.files?.doc) {
+            try {
+                const result = await cloudinary.uploader.upload(req.files.doc.tempFilePath);
+                docLink = result.secure_url;  // Use `secure_url` for a valid HTTPS link
+                // console.log("Upload result:", result);
+            } catch (error) {
+                console.error("Cloudinary upload error:", error);
+                return res.status(500).json({ success: false, message: "Error uploading document" });
+            }
+        }
+
+        if (!docLink && !webLink) {
+            return res.status(400).json({ success: false, message: "Either a document or web link must be provided" });
+        }
+
+        group.docs = group.docs || [];
+        group.docs.push({
+            docLink,
+            review: "",
+            comment: comment || "",
+            webLink: webLink || ""
+        });
+
+        await group.save();
+
+        const notifyUsers = async (users, message) => {
+            await Promise.all(users.map(async (stu) => {
+                const studentObj = await Student.findById(stu);
+                if (studentObj) {
+                    studentObj.notifications = studentObj.notifications || { seen: [], unseen: [] };
+                    studentObj.notifications.unseen.push({ type: "Important", message });
+                    await studentObj.save();
+                }
+            }));
+        };
+
+        await notifyUsers(group.students, `Document has been uploaded`);
+
+        const supervisor = await Supervisor.findById(group.supervisor);
+        if (supervisor) {
+            supervisor.notifications = supervisor.notifications || { seen: [], unseen: [] };
+            supervisor.notifications.unseen.push({
+                type: "Reminder",
+                message: `A document has been uploaded by group: ${group.title}`,
+            });
+            await supervisor.save();
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: "File uploaded successfully",
+            doc: { webLink: webLink || "", comment: comment || "", docLink }
+        });
+
+    } catch (error) {
+        console.error('Error uploading document:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };

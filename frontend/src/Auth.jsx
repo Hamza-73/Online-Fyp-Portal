@@ -5,10 +5,35 @@ import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 import Particles from 'react-tsparticles'; // For background particles
 import GCU_COURAGE_TO_KNOW from './assets/images/gcu-logo-courage-tok-know.jpg';
 import { AuthContext } from './context/AuthApis';
+import Cookies from 'js-cookie';
+import { jwtDecode } from "jwt-decode";
 
 function Auth() {
-    const { loginUser } = useContext(AuthContext);
+
     const navigate = useNavigate();
+    useEffect(() => {
+        const authCookie = Cookies.get("auth");
+        if (!authCookie) return; // No cookie, exit early
+
+        try {
+            const { token, role } = JSON.parse(authCookie); // Parse stored JSON
+            if (!token || !role) return; // Missing data, exit early
+
+            const { exp } = jwtDecode(token);
+            if (exp && exp < Math.floor(Date.now() / 1000)) {
+                console.log("Token expired, removing...");
+                Cookies.remove("auth");
+                return;
+            }
+
+            navigate(`/${role}/profile`);
+        } catch (error) {
+            console.log("Invalid auth data, removing...");
+            Cookies.remove("auth");
+        }
+    }, [navigate]);
+
+    const { loginUser } = useContext(AuthContext);
 
     const [data, setData] = useState({
         username: '',
@@ -47,7 +72,7 @@ function Auth() {
                 document.cookie = `auth=${encodeURIComponent(JSON.stringify(authData))}; path=/; max-age=${3600 * 24}`;
 
                 setTimeout(() => {
-                    navigate(`/${response.role}/profile`);
+                    navigate(`/${response.role}/announcements`);
                 }, 1500);
             } else {
                 toast.error(response.message);
@@ -82,13 +107,13 @@ function Auth() {
             <div className="relative z-10 w-full max-w-6xl flex rounded-lg overflow-hidden shadow-2xl">
                 {/* Left Side: Animated Slogans */}
                 <div className="hidden lg:flex w-1/2 text-white flex-col justify-center items-center p-8 relative"
-                     style={{
-                         background: "rgba(90, 0, 6, 0.7)",
-                         boxShadow: "0px 0px 50px 10px rgba(0, 0, 0, 0.15)",
-                         backdropFilter: "blur(106px)",
-                         WebkitBackdropFilter: "blur(106px)",
-                         backgroundImage: "linear-gradient(rgba(0, 0, 91, 1), rgba(90, 0, 6, 1))"
-                     }}>
+                    style={{
+                        background: "rgba(90, 0, 6, 0.7)",
+                        boxShadow: "0px 0px 50px 10px rgba(0, 0, 0, 0.15)",
+                        backdropFilter: "blur(106px)",
+                        WebkitBackdropFilter: "blur(106px)",
+                        backgroundImage: "linear-gradient(rgba(0, 0, 91, 1), rgba(90, 0, 6, 1))"
+                    }}>
                     <div className="text-4xl font-bold mb-4 text-center animate-slide-in-left">
                         {slogans[currentSlogan]}
                     </div>

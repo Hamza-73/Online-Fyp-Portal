@@ -6,7 +6,9 @@ import { SupervisorContext } from '../../context/SupervisorApis';
 import ProposalRequests from './ProposalRequests';
 import Groups from '../Group/Groups';
 import Notifications from '../Notifications';
+import Announcements from '../Announcements';
 import MyGroups from './MyGroups';
+import GroupDetail from './GroupDetail';
 
 export default function Supervisor() {
   const { getProfile } = useContext(SupervisorContext);
@@ -71,6 +73,16 @@ export default function Supervisor() {
       >
         <Routes>
           <Route
+            path="/announcements"
+            element={
+              userData ? (
+                <Announcements userData={userData} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
             path="/profile"
             element={
               userData ? (
@@ -115,6 +127,16 @@ export default function Supervisor() {
             element={
               userData ? (
                 <MyGroups userData={userData} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/my-groups/:index"
+            element={
+              userData ? (
+                <GroupDetail userData={userData} />
               ) : (
                 <Navigate to="/" replace />
               )

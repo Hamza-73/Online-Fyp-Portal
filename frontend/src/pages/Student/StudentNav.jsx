@@ -55,6 +55,9 @@ const StudentNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
         // onClick={toggleSidebar} 
         >
           <img src={LOGO} alt="GCU Logo" className="mb-4 w-20 mx-auto" />
+          <Link to="/student/announcements" className="p-2 text-lg hover:bg-gray-200">
+            Announcements
+          </Link>
           <Link to="/student/supervisors" className="p-2 text-lg hover:bg-gray-200">
             Supervisors
           </Link>
@@ -89,13 +92,17 @@ const StudentNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
             )}
           </div>
         </Link>
-        <Link to='/student/profile' className='flex items-center space-x-4'>
+        <Link to='/student/profile' className='flex items-center space-x-4 relative group'>
           <img
             src={AVATAR}
             alt="User Avatar"
             className="w-10 h-10 rounded-full cursor-pointer"
           />
           <h1 className="text-xl text-white font-semibold">{userData?.rollNo || 'User'}</h1>
+          {/* Tooltip */}
+          <span className="absolute left-1/2 -bottom-8 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            Profile
+          </span>
         </Link>
       </div>
 

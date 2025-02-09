@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import AdminNav from './AdminNav';
 import Login from '../Login';
-import Dashboard from '../Dashboard';
+import Announcements from '../Announcements';
 import AdminList from './AdminList';
 import AdminProfile from './AdminProfile';
 import EditAdminProfile from './EditAdminProfile';
@@ -68,16 +68,16 @@ export default function Admin() {
           path="/login"
           element={
             userData ? (
-              <Navigate to="/admin/dashboard" replace />
+              <Navigate to="/admin/announcements" replace />
             ) : (
               <Login user="admin" onLogin={fetchUserProfile} />
             )
           }
         />
         <Route
-          path="/dashboard"
+          path="/announcements"
           element={
-            userData ? <Dashboard /> : <Navigate to="/admin/login" replace />
+            userData ? <Announcements /> : <Navigate to="/admin/login" replace />
           }
         />
         <Route

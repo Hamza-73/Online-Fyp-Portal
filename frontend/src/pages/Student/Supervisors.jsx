@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { SupervisorContext } from '../../context/SupervisorApis';
 import { FaUser } from 'react-icons/fa';
-import {Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import Loading from '../Loading';
 
 export default function Supervisors() {
   const [supervisors, setSupervisors] = useState(null);
@@ -25,7 +26,7 @@ export default function Supervisors() {
         <h2 className="text-3xl font-bold text-center mb-8">Supervisors</h2>
 
         {/* Display supervisors in a grid */}
-        <div className="grid grid-cols-1  sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {supervisors ? <div className="grid grid-cols-1  sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {supervisors?.map((supervisor) => (
             <Link to={`/student/supervisor/${supervisor._id}`}
               key={supervisor._id}
@@ -57,7 +58,7 @@ export default function Supervisors() {
               </div>
             </Link>
           ))}
-        </div>
+        </div> : <Loading />}
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import SupervisorDetail from './SupervisorDetail';
 import MyGroup from './MyGroup';
 import Groups from './Groups';
 import Notifications from '../Notifications';
+import Announcements from '../Announcements';
 
 export default function Student() {
   const { getProfile } = useContext(StudentContext);
@@ -59,6 +60,12 @@ export default function Student() {
         />
       )}
       <Routes>
+        <Route
+          path="/announcements"
+          element={
+            userData ? <Announcements userData={userData} /> : <Navigate to="/" replace />
+          }
+        />
         <Route
           path="/profile"
           element={

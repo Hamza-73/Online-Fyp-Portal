@@ -8,15 +8,25 @@ const fileUpload = require('express-fileupload');
 const cookieParser = require('cookie-parser')
 const app = express();
 
+
 // Ensure .env file is loaded before anything else
 dotenv.config({ path: path.resolve(__dirname, 'config/.env') });
 
 // Connect to the database
 connectDatabase();
 
+
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: 'dfexs9qho',
+  api_key: '798692241663155',
+  api_secret: '_zRYx_DFqV6FXNK664jRFxbKRP8'
+});
+
 // CORS configuration
 const corsOptions = {
-  origin: 'https:/localhost:5173',
+  origin: 'http://localhost:5173',
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type, Authorization',
   credentials: true,
@@ -26,7 +36,7 @@ app.use(cors(corsOptions));
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(fileUpload())
+app.use(fileUpload({ useTempFiles: true }));
 app.use(cookieParser())
 
 

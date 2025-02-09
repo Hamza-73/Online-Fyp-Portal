@@ -20,7 +20,6 @@ export default function SupervisorDetail({ userData }) {
   useEffect(() => {
     const fetchSupervisor = async () => {
       const response = await getSupervisorDetail(supervisorId);
-      console.log("response is", response);
       if (response.success) {
         setSupervisor(response.supervisor);
       }
@@ -46,39 +45,38 @@ export default function SupervisorDetail({ userData }) {
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto">
       {/* Supervisor Details */}
       {supervisor ? (
-        <div className="bg-white shadow-lg p-6 rounded-lg ">
-          <h2 className="flex items-center text-xl font-semibold  mb-4">
-            <FaUser className="mr-2" /> {supervisor.name}
+        <div className="bg-white shadow-lg p-6 rounded-lg mb-8">
+          <h2 className="flex items-center text-3xl font-semibold mb-4">
+            <FaUser className="mr-3 text-4xl" /> {supervisor.name}
           </h2>
-          <div className="text-gray-700 space-y-2">
+          <div className="text-lg space-y-4">
             <div className="flex flex-wrap justify-between">
               <p>
-                <span className="font-medium">Designation:</span> {supervisor.designation}
+                <span className="font-semibold">Designation:</span> {supervisor.designation}
               </p>
               <p>
-                <span className="font-medium">Department:</span> {supervisor.department}
+                <span className="font-semibold">Department:</span> {supervisor.department}
               </p>
             </div>
             <p>
-              <span className="font-medium">Slots Available:</span> {supervisor.slots}
+              <span className="font-semibold">Slots Available:</span> {supervisor.slots}
             </p>
           </div>
           {/* Show/Hide Form Button */}
           {!userData.isGroupMember &&
             !userData.requests?.rejectedRequests?.includes(supervisorId) && (
-              <div className="text-center mt-4">
+              <div className="text-center mt-6">
                 <button
                   onClick={() => setShowForm(!showForm)}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none"
+                  className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all ease-in-out duration-300"
                 >
                   {showForm ? 'Cancel Request' : 'Send Request for Proposal'}
                 </button>
               </div>
             )}
-
         </div>
       ) : (
         <p className="text-gray-500 text-center">Loading supervisor details...</p>
@@ -86,47 +84,49 @@ export default function SupervisorDetail({ userData }) {
 
       {/* Request Form */}
       {showForm && (
-        <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold text-center mb-4">Send Project Request</h3>
+        <div className="mt-8 bg-white p-8 rounded-lg shadow-lg">
+          <h3 className="text-2xl font-semibold text-center mb-6">Send Project Request</h3>
           {message && <p className="text-center text-green-600">{message}</p>}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Project Title</label>
-              <input
-                type="text"
-                name="projectTitle"
-                value={formData.projectTitle}
-                onChange={handleChange}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
-                required
-              />
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-lg font-medium text-gray-700">Project Title</label>
+                <input
+                  type="text"
+                  name="projectTitle"
+                  value={formData.projectTitle}
+                  onChange={handleChange}
+                  className="mt-2 block w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-600"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-lg font-medium text-gray-700">Scope</label>
+                <input
+                  type="text"
+                  name="scope"
+                  value={formData.scope}
+                  onChange={handleChange}
+                  className="mt-2 block w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-600"
+                  required
+                />
+              </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <label className="block text-lg font-medium text-gray-700">Description</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 rows="4"
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Scope</label>
-              <input
-                type="text"
-                name="scope"
-                value={formData.scope}
-                onChange={handleChange}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
+                className="mt-2 block w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-600"
                 required
               />
             </div>
             <div className="text-center">
               <button
                 type="submit"
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none"
+                className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all ease-in-out duration-300"
               >
                 Submit Request
               </button>

@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Supervisor = require('../models/supervisor.model.js');
 const Group = require('../models/group.model.js');
+const Announcement = require('../models/announcement.model.js');
 
 const JWT_KEY = process.env.JWT_KEY;
 
@@ -134,11 +135,22 @@ module.exports.login = async (req, res) => {
         let user;
         let role;
 
-        // Check if user exists in the student collection
-        user = await Student.findOne({ rollNo: username });
-        if (user) {
-            role = 'student';
-        } else {
+        // Check if username is a rollNo or CNIC for students
+        if (/^\d{4}(-RE-R)?(-R)?-BSCS-\d{2}$/.test(username)) {
+            // Check if user exists in the student collection by rollNo
+            user = await Student.findOne({ rollNo: username });
+            if (user) {
+                role = 'student';
+            }
+        } else if (/^\d{13}$/.test(username)) {
+            // Check if user exists in the student collection by CNIC
+            user = await Student.findOne({ cnic: username });
+            if (user) {
+                role = 'student';
+            }
+        }
+
+        if (!user) {
             // Check if user exists in the supervisor collection
             user = await Supervisor.findOne({ username });
             if (user) {
@@ -165,7 +177,7 @@ module.exports.login = async (req, res) => {
 
         // Set the token and role in a cookie with appropriate settings
         res.cookie('auth', tokenWithRole, {
-            httpOnly: false,  // Allow JavaScript access to cookie
+            httpOnly: false,  // Set httpOnly to true for better security
             secure: process.env.NODE_ENV === 'production',  // Set to true for HTTPS in production
             sameSite: 'strict',  // 'lax' or 'none' could be used if 'strict' causes issues
             maxAge: 3600000 * 24,  // Cookie expiry: 24 hours
@@ -185,6 +197,7 @@ module.exports.login = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
 
 module.exports.getGroups = async (req, res) => {
     try {
@@ -338,3 +351,14 @@ module.exports.removeNotification = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+
+module.exports.getAnnouncement = async (req,res) => {
+    try {
+        const announcement = await Announcement.find({});
+        res.json({announcement});        
+    } catch (error) {
+        console.error("Error getting announcement :", error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+}

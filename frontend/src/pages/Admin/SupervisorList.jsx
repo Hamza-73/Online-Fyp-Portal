@@ -10,7 +10,7 @@ import { FaUser, FaEnvelope, FaLock, FaBuilding, FaIdCard, FaUserTie, FaFingerpr
 export default function SupervisorList({ userData }) {
     const navigate = useNavigate();
     const { registerSupervisor } = useContext(AuthContext);
-    const { deleteSupervisor } = useContext(SupervisorContext);
+    const { deleteSupervisor, registerSupervisorFromFile } = useContext(SupervisorContext);
     const [supervisors, setSupervisors] = useState([]);
     const [selectedSupervisor, setSelectedSupervisor] = useState({});
     const [showModal, setShowModal] = useState(false);
@@ -94,6 +94,25 @@ export default function SupervisorList({ userData }) {
         }
     };
 
+    const handleFileUpload = async (e) => {
+        // console.log("reninng")
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const response = await registerSupervisorFromFile(file);
+            // console.log("response is ", response)
+            if (response.success) {
+                setSupervisors((prev) => [...prev, ...response.newSupervisors]);
+                toast.success('Students registered successfully from file.');
+            } else {
+                toast.error(response.message || 'Failed to register admins from file.');
+            }
+        } catch (error) {
+            toast.error(error.message || 'Error processing file.');
+        }
+    };
+
     const handleDelete = async (id) => {
         const confirmDelete = window.confirm("Are you sure you want to delete this supervisor?");
         if (confirmDelete) {
@@ -130,8 +149,8 @@ export default function SupervisorList({ userData }) {
                                 <td className="py-3 px-6">{supervisor.username}</td>
                                 <td className="py-3 px-6">{supervisor.email}</td>
                                 <td className="py-3 px-6">{supervisor.designation}</td>
-                                <td className="py-3 px-6">{supervisor.cnic}</td> 
-                                <td className="py-3 px-6">{supervisor.slots}</td> 
+                                <td className="py-3 px-6">{supervisor.cnic}</td>
+                                <td className="py-3 px-6">{supervisor.slots}</td>
                                 {(userData?.superAdmin || userData?.write_permission) &&
                                     <td className="py-3 px-6 text-center flex justify-center space-x-4">
                                         <Link to={`/admin/edit-supervisor-profile/${supervisor._id}`} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
@@ -148,12 +167,27 @@ export default function SupervisorList({ userData }) {
                     </tbody>
                 </table>
             </div>
-            <button
-                className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 fixed bottom-8 right-8"
-                onClick={handleAddClick}
-            >
-                Add Supervisor
-            </button>
+            <div className="mt-4 flex justify-between items-center">
+                <button
+                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    onClick={handleAddClick}
+                >
+                    Add Supervisor
+                </button>
+                <label
+                    htmlFor="fileUpload"
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer"
+                >
+                    Upload Excel
+                    <input
+                        type="file"
+                        id="fileUpload"
+                        className="hidden"
+                        accept=".xlsx, .xls"
+                        onChange={handleFileUpload}
+                    />
+                </label>
+            </div>
 
             {/* Modal */}
             {showModal && (

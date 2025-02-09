@@ -8,6 +8,7 @@ import Auth from './Auth'
 import Student from './pages/Student/Student'
 import { SupervisorApis } from './context/SupervisorApis.jsx'
 import Supervisor from './pages/Supervisor/Supervisor.jsx'
+import Loading from './pages/Loading.jsx'
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
                 <Route path='/admin/*' element={<Admin />} />
                 <Route path='/student/*' element={<Student />} />
                 <Route path='/supervisor/*' element={<Supervisor />} />
+                <Route path='/loading' element={<Loading />} />
               </Routes>
             </AdminApis>
           </AuthApis>

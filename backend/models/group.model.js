@@ -14,22 +14,41 @@ const groupSchema = new Schema({
         internalMarks: { type: Number, default: 0 },
         hodMarks: { type: Number, default: 0 },
     },
-    deadlines: {
-        proposalSubmission: { type: Date },
-        documentationSubmission: { type: Date },
-        projectSubmission: { type: Date },
-    },
+    // deadlines: {
+    //     proposalSubmission: { type: Date },
+    //     documentationSubmission: { type: Date },
+    //     projectSubmission: { type: Date },
+    // },
+    deadlines: { type: mongoose.Schema.Types.ObjectId, ref: "Deadline" },
     submissions: {
-        proposalSubmitted: { type: Date },
-        documentationSubmitted: { type: Date },
-        projectSubmitted: { type: Date },
+        proposal: {
+            submitted: { type: Boolean, default: false },
+            submittedAt: { type: Date },
+            submittedBy: { type: Schema.Types.ObjectId, ref: 'Student' },
+            documentLink: { type: String, default: "" },
+            webLink: { type: String, default: "" }, // in case of external link
+        },
+        documentation: {
+            submitted: { type: Boolean, default: false },
+            submittedAt: { type: Date },
+            submittedBy: { type: Schema.Types.ObjectId, ref: 'Student' },
+            documentLink: { type: String, default: "" },
+            webLink: { type: String, default: "" }, // in case of external link
+        },
+        project: {
+            submitted: { type: Boolean, default: false },
+            submittedAt: { type: Date },
+            submittedBy: { type: Schema.Types.ObjectId, ref: 'Student' },
+            documentLink: { type: String, default: "" },
+            webLink: { type: String, default: "" }, // in case of external link
+        },
     },
-    // docs: [{
-    //     docLink: { type: String },
-    //     review: { type: String },
-    //     comment: { type: String },
-    //     link: { type: String },
-    // }],
+    docs: [{
+        docLink: { type: String, default: "" },
+        review: { type: String, default: "" },
+        comment: { type: String, default: "" },
+        webLink: { type: String, default: "" },
+    }],
 });
 
 

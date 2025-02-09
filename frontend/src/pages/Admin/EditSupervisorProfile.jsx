@@ -194,6 +194,23 @@ export default function EditSupervisorProfile() {
                             </div>
                         </div>
 
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-gray-700 font-semibold mb-2">Committee Member</label>
+                                <input
+                                    type="checkbox"
+                                    name="isCommittee"
+                                    checked={editedSupervisor.isCommittee === 'true' || editedSupervisor.isCommittee === true}
+                                    onChange={(e) =>
+                                        setEditedSupervisor((prev) => ({ ...prev, isCommittee: e.target.checked }))
+                                    }
+                                    disabled={!isEditing}
+                                    className="w-5 h-5"
+                                />
+                            </div>
+                        </div>
+
+
                         {/* Buttons for editing, saving, and canceling */}
                         <div className="flex justify-end">
                             {isEditing ? (

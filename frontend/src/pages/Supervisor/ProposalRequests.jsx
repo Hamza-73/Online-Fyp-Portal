@@ -194,6 +194,54 @@ export default function ProposalRequests() {
                                             : selectedRequest.group?.name || "-"}
                                     </td>
                                 </tr>
+                                <tr className="border-b">
+                                    <td className="py-3 px-6 font-bold">
+                                        Scope
+                                    </td>
+                                    <td className="py-3 px-6">
+                                        {selectedRequest.project?.scope || "-"}
+                                    </td>
+                                </tr>
+                                <tr className="border-b">
+                                    <td className="py-3 px-6 font-bold">
+                                        Description
+                                    </td>
+                                    <td className="py-3 px-6">
+                                        {selectedRequest.project?.description || "-"}
+                                    </td>
+                                </tr>
+                                <tr className="border-b">
+                                    <td className="py-3 px-6 font-bold">
+                                        Student Name
+                                    </td>
+                                    <td className="py-3 px-6">
+                                        {selectedRequest.student?.name || "-"}
+                                    </td>
+                                </tr>
+                                <tr className="border-b">
+                                    <td className="py-3 px-6 font-bold">
+                                        Student Roll No
+                                    </td>
+                                    <td className="py-3 px-6">
+                                        {selectedRequest.student?.rollNo || "-"}
+                                    </td>
+                                </tr>
+                                <tr className="border-b">
+                                    <td className="py-3 px-6 font-bold">
+                                        Student Batch
+                                    </td>
+                                    <td className="py-3 px-6">
+                                        {selectedRequest.student?.batch || "-"}
+                                    </td>
+                                </tr>
+                                <tr className="border-b">
+                                    <td className="py-3 px-6 font-bold">
+                                        Student Department
+                                    </td>
+                                    <td className="py-3 px-6">
+                                        {selectedRequest.student?.department || "-"}
+                                    </td>
+                                </tr>
                                 {activeTab === "group" && (
                                     <tr className="border-b">
                                         <td className="py-3 px-6 font-bold">Members</td>
@@ -204,7 +252,6 @@ export default function ProposalRequests() {
                                         </td>
                                     </tr>
                                 )}
-                                {/* Other details here */}
                             </tbody>
                         </table>
                         <div className="flex justify-center my-4">

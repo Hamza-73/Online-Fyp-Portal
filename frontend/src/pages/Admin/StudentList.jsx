@@ -10,7 +10,7 @@ import { FaUser, FaEnvelope, FaLock, FaIdCard, FaBook, FaUserFriends, FaBuilding
 export default function StudentList({ userData }) {
     const navigate = useNavigate();
     const { registerStudent } = useContext(AuthContext);
-    const { deleteStudent } = useContext(StudentContext);
+    const { deleteStudent , registerStudentFromFile} = useContext(StudentContext);
     const [students, setStudents] = useState([]);
     const [selectedStudent, setSelectedStudent] = useState({});
     const [showModal, setShowModal] = useState(false);
@@ -90,6 +90,25 @@ export default function StudentList({ userData }) {
         }
     };
 
+    const handleFileUpload = async (e) => {
+        // console.log("reninng")
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const response = await registerStudentFromFile(file);
+            console.log("response is ", response)
+            if (response.success) {
+                setStudents((prev) => [...prev, ...response.newStudents]);
+                toast.success('Students registered successfully from file.');
+            } else {
+                toast.error(response.message || 'Failed to register admins from file.');
+            }
+        } catch (error) {
+            toast.error(error.message || 'Error processing file.');
+        }
+    };
+
     const handleDelete = async (id) => {
         const confirmDelete = window.confirm("Are you sure you want to delete this student?");
         if (confirmDelete) {
@@ -146,12 +165,27 @@ export default function StudentList({ userData }) {
                     </tbody>
                 </table>
             </div>
-            <button
-                className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 fixed bottom-8 right-8"
-                onClick={handleAddClick}
-            >
-                Add
-            </button>
+            <div className="mt-4 flex justify-between items-center">
+                <button
+                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                    onClick={handleAddClick}
+                >
+                    Add Student
+                </button>
+                <label
+                    htmlFor="fileUpload"
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer"
+                >
+                    Upload Excel
+                    <input
+                        type="file"
+                        id="fileUpload"
+                        className="hidden"
+                        accept=".xlsx, .xls"
+                        onChange={handleFileUpload}
+                    />
+                </label>
+            </div>
 
             {/* Modal */}
             {showModal && (

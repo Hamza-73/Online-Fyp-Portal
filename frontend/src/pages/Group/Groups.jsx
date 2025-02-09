@@ -1,17 +1,20 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../context/AuthApis";
 import toast, { Toaster } from "react-hot-toast";
+import { SupervisorContext } from "../../context/SupervisorApis";
 
 export default function Groups({ userData }) {
     const { getGroups } = useContext(AuthContext);
+    const { setDeadline } = useContext(SupervisorContext);
     const [groups, setGroups] = useState(null);
-
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedDeadline, setSelectedDeadline] = useState("");
+    const [deadlineDate, setDeadlineDate] = useState("");
+    
+    console.log("user is ", userData)
     useEffect(() => {
         const fetchGroup = async () => {
             const result = await getGroups();
-            console.log("group ",
-                result.data
-            )
             if (result.success) {
                 setGroups(result.data);
             } else {
@@ -21,6 +24,47 @@ export default function Groups({ userData }) {
         fetchGroup();
     }, []);
 
+    const handleDeadlineChange = (e) => {
+        setDeadlineDate(e.target.value);
+    };
+
+    const handleSubmitDeadline = async () => {
+        const currentDate = new Date();
+        const selectedDate = new Date(deadlineDate);
+
+        // Ensure the selected date is not in the past
+        if (!selectedDeadline || !deadlineDate) {
+            toast.error("Please select a deadline type and date/time.");
+            return;
+        }
+
+        if (selectedDate <= currentDate) {
+            toast.error("The deadline date and time cannot be in the past.");
+            return;
+        }
+
+        const result = await setDeadline(selectedDeadline, selectedDate);
+        // console.log("deadline response ", result);
+        if (result.success) {
+            toast.success(result.message);
+        }else{
+            toast.error(result.message);
+        }
+        setDeadlineDate("");
+        setSelectedDeadline("");
+        setIsModalOpen(false);
+    };
+
+    // Get the current date and set the min value for the input
+    const getCurrentDateTime = () => {
+        const current = new Date();
+        const year = current.getFullYear();
+        const month = (current.getMonth() + 1).toString().padStart(2, "0");
+        const day = current.getDate().toString().padStart(2, "0");
+        const hours = current.getHours().toString().padStart(2, "0");
+        const minutes = current.getMinutes().toString().padStart(2, "0");
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
 
     return (
         <div className="p-8 min-h-screen bg-gradient-to-b from-gray-100 to-gray-200">
@@ -76,6 +120,62 @@ export default function Groups({ userData }) {
             ) : (
                 <p className="text-gray-600 text-center">Loading groups...</p>
             )}
+
+            {/* Deadline Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 flex justify-center items-center bg-gray-900 bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded-lg w-96">
+                        <h2 className="text-xl font-semibold mb-4 text-center">Set Deadline</h2>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2">Select Deadline Type</label>
+                            <select
+                                value={selectedDeadline}
+                                onChange={(e) => setSelectedDeadline(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-lg"
+                            >
+                                <option value="">Select...</option>
+                                <option value="proposal">Proposal</option>
+                                <option value="documentation">Documentation</option>
+                                <option value="project">Project</option>
+                            </select>
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 mb-2">Set Date and Time</label>
+                            <input
+                                type="datetime-local"
+                                value={deadlineDate}
+                                onChange={handleDeadlineChange}
+                                min={getCurrentDateTime()} // Disable current date and time
+                                className="w-full p-2 border border-gray-300 rounded-lg"
+                            />
+                        </div>
+                        <div className="flex justify-between">
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmitDeadline}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            >
+                                Submit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Button to open the modal */}
+            {(userData && userData.isCommittee) && <div className="fixed bottom-8 right-8">
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="px-4 py-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300"
+                >
+                    Set Deadline
+                </button>
+            </div>}
         </div>
     );
 }

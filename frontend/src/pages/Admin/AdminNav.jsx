@@ -23,42 +23,37 @@ const AdminNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
         className="absolute top-4 left-4 z-50 p-2 rounded focus:outline-none"
         onClick={toggleSidebar}
       >
-      <div className="relative w-8 h-8 flex flex-col justify-center items-center">
-        {/* Hamburger and Cross Animation */}
-        <span
-          className={`bg-white block w-8 h-1 mb-1 rounded transition-transform duration-300 ${
-            isSidebarOpen ? 'rotate-[45deg] translate-y-[16px] bg-yellow-400' : ''
-          }`}
-        ></span>
-        <span
-          className={`bg-white block w-8 h-1 mb-1 rounded transition-opacity duration-300 ${
-            isSidebarOpen ? 'opacity-0' : 'opacity-100'
-          }`}
-        ></span>
-        <span
-          className={`bg-white block w-8 h-1 mb-1 rounded transition-transform duration-300 ${
-            isSidebarOpen ? '-rotate-[45deg]  bg-yellow-400' : ''
-          }`}
-        ></span>
-      </div>
+        <div className="relative w-8 h-8 flex flex-col justify-center items-center">
+          {/* Hamburger and Cross Animation */}
+          <span
+            className={`bg-white block w-8 h-1 mb-1 rounded transition-transform duration-300 ${isSidebarOpen ? 'rotate-[45deg] translate-y-[16px] bg-yellow-400' : ''
+              }`}
+          ></span>
+          <span
+            className={`bg-white block w-8 h-1 mb-1 rounded transition-opacity duration-300 ${isSidebarOpen ? 'opacity-0' : 'opacity-100'
+              }`}
+          ></span>
+          <span
+            className={`bg-white block w-8 h-1 mb-1 rounded transition-transform duration-300 ${isSidebarOpen ? '-rotate-[45deg]  bg-yellow-400' : ''
+              }`}
+          ></span>
+        </div>
       </button>
 
       {/* Sidebar */}
       <div
         ref={sidebarRef}
-        className={`fixed top-0 left-0 h-full bg-white shadow-md transition-transform duration-300 z-40 lg:${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } ${
-          isSidebarOpen
+        className={`fixed top-0 left-0 h-full bg-white shadow-md transition-transform duration-300 z-40 lg:${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } ${isSidebarOpen
             ? 'translate-x-0'
             : '-translate-x-full sm:-translate-x-full md:-translate-x-full'
-        }`}
+          }`}
         style={{ width: '250px' }}
       >
         <div className="flex flex-col p-4">
-          <img src={LOGO} alt="GCU Logo" className="mb-4 w-20 mx-auto"/>
-          <Link to="/admin/dashboard" className="p-2 text-lg hover:bg-gray-200">
-            Dashboard
+          <img src={LOGO} alt="GCU Logo" className="mb-4 w-20 mx-auto" />
+          <Link to="/admin/announcements" className="p-2 text-lg hover:bg-gray-200">
+          Announcements
           </Link>
           <Link to="/admin/admin-list" className="p-2 text-lg hover:bg-gray-200">
             Admin
@@ -79,17 +74,21 @@ const AdminNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
       </div>
 
       {/* Avatar and User Info */}
-       <div
+      <div
         className="fixed top-0 right-0 w-full bg-[maroon] shadow-md flex items-center justify-end space-x-4 p-10 z-35"
         style={{ height: '64px' }} // Adjust height as needed
       >
-        <Link to='/admin/profile' className='flex items-center space-x-4'>
-        <img
-          src={AVATAR}
-          alt="User Avatar"
-          className="w-10 h-10 rounded-full cursor-pointer"
-        />
-        <h1 className="text-xl text-white font-semibold">{userData?.username || 'User'}</h1>
+        <Link to='/student/profile' className='flex items-center space-x-4 relative group'>
+          <img
+            src={AVATAR}
+            alt="User Avatar"
+            className="w-10 h-10 rounded-full cursor-pointer"
+          />
+          <h1 className="text-xl text-white font-semibold">{userData?.username || 'User'}</h1>
+          {/* Tooltip */}
+          <span className="absolute left-1/2 -bottom-8 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            Profile
+          </span>
         </Link>
       </div>
     </header>
