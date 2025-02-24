@@ -10,6 +10,7 @@ import MyGroup from './MyGroup';
 import Groups from './Groups';
 import Notifications from '../Notifications';
 import Announcements from '../Announcements';
+import Loading from '../Loading';
 
 export default function Student() {
   const { getProfile } = useContext(StudentContext);
@@ -41,7 +42,7 @@ export default function Student() {
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   const pathsWithoutSidebar = ['/', '/student/login', '/'];

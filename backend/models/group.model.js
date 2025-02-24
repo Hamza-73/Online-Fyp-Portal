@@ -23,7 +23,7 @@ const groupSchema = new Schema({
     submissions: {
         proposal: {
             submitted: { type: Boolean, default: false },
-            submittedAt: { type: Date },
+            submittedAt: { type: Date, default: Date.now() },
             submittedBy: { type: Schema.Types.ObjectId, ref: 'Student' },
             documentLink: { type: String, default: "" },
             webLink: { type: String, default: "" }, // in case of external link

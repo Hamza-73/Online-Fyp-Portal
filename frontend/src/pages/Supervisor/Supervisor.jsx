@@ -9,6 +9,7 @@ import Notifications from '../Notifications';
 import Announcements from '../Announcements';
 import MyGroups from './MyGroups';
 import GroupDetail from './GroupDetail';
+import Loading from '../Loading';
 
 export default function Supervisor() {
   const { getProfile } = useContext(SupervisorContext);
@@ -47,7 +48,7 @@ export default function Supervisor() {
 
   // Loading state
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   // Sidebar visibility logic
@@ -67,9 +68,8 @@ export default function Supervisor() {
 
       {/* Main content area */}
       <div
-        className={`relative top-[85px] transition-all duration-300 flex-1 ${
-          showSidebar && isSidebarOpen ? 'ml-[250px]' : 'ml-0'
-        }`}
+        className={`relative top-[85px] transition-all duration-300 flex-1 ${showSidebar && isSidebarOpen ? 'ml-[250px]' : 'ml-0'
+          }`}
       >
         <Routes>
           <Route

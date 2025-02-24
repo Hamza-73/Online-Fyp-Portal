@@ -12,6 +12,7 @@ import StudentList from './StudentList';
 import SupervisorList from './SupervisorList';
 import EditSupervisorProfile from './EditSupervisorProfile';
 import '../../index.css'
+import Loading from '../Loading';
 
 export default function Admin() {
   const { getProfile } = useContext(AdminContext);
@@ -46,7 +47,7 @@ export default function Admin() {
   const showSidebar = !pathsWithoutSidebar.includes(location.pathname);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loading/>;
   }
 
   return (

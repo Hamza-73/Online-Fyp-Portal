@@ -24,7 +24,8 @@ module.exports.profile = async (req, res) => {
     const id = req.user.id;  // Extract the user ID from the token
 
     // Fetch the supervisor profile based on the ID from the token
-    const supervisorData = await Supervisor.findById(id);
+    const supervisorData = await Supervisor.findById(id)
+    .populate('deadlines');
 
     if (!supervisorData) {
       return res.status(404).json({ message: 'Supervisor not found', success: false });
@@ -409,6 +410,14 @@ module.exports.acceptRequest = async (req, res) => {
     project.supervisor = supervisor._id;
     project.status = 'accepted';
 
+    // if group is formed after the deadline has been announced than add deadline id to new group
+    const deadline = await Deadline.find({});
+    // console.log("deadline is ", deadline)
+    if (deadline && deadline[0]) {
+      // console.log("runing")
+      newGroup.deadlines = deadline[0]?._id;
+    }
+
     supervisor.slots--;
     if (supervisor.slots === 0) {
       await Promise.all(
@@ -511,10 +520,24 @@ module.exports.getMyGroups = async (req, res) => {
     const groups = await Supervisor.findById(req.user.id)
       .populate({
         path: 'groups',
-        populate: {
-          path: 'students', // This will populate the students in each group
-          model: 'Student'  // Ensure the 'Student' model is correctly referenced
-        }
+        populate: [
+          { path: 'supervisor', select: 'name email department designation slots' },
+          { path: 'project', select: 'title description scope' },
+          { path: 'students', select: 'name email rollNo batch semester department' },
+          { path: 'deadlines' },
+          { 
+              path: 'submissions.proposal.submittedBy', 
+              select: 'name email rollNo' 
+          },
+          { 
+              path: 'submissions.documentation.submittedBy', 
+              select: 'name email rollNo' 
+          },
+          { 
+              path: 'submissions.project.submittedBy', 
+              select: 'name email rollNo' 
+          },
+      ]
       });
 
 
@@ -589,7 +612,7 @@ module.exports.setDeadline = async (req, res) => {
       return res.status(500).json({ success: false, message: "Only A Committee Member can Set Deadline" });
     }
 
-    if (!["proposal", "documentation", "finalReport"].includes(submissionType)) {
+    if (!["proposal", "documentation", "project"].includes(submissionType)) {
       return res.status(400).json({ message: "Invalid submission type" });
     }
 
@@ -638,9 +661,9 @@ module.exports.setDeadline = async (req, res) => {
 
         extendOrSetDeadline("documentation");
       },
-      "finalReport": () => {
-        if (!isDeadlineValid("finalReport", "documentation")) return;
-        if (deadline.deadlines.finalReport && new Date(deadline.deadlines.finalReport) > new Date()) {
+      "project": () => {
+        if (!isDeadlineValid("project", "documentation")) return;
+        if (deadline.deadlines.project && new Date(deadline.deadlines.project) > new Date()) {
           return res.status(400).json({ message: "Final Report deadline is already set and has not passed yet" });
         }
 
@@ -648,7 +671,7 @@ module.exports.setDeadline = async (req, res) => {
           return res.status(400).json({ message: "Documentation deadline has not passed yet, cannot set Final Report deadline" });
         }
 
-        extendOrSetDeadline("finalReport");
+        extendOrSetDeadline("project");
       }
     };
 
@@ -679,15 +702,15 @@ module.exports.setDeadline = async (req, res) => {
             message: `Deadline Announced for ${submissionType.charAt(0).toUpperCase() + submissionType.slice(1)} ${new Date(deadlineDate).toLocaleString()}`,
             type: "Important"
           });
-    
+
           if (student.group) {
             await Group.findByIdAndUpdate(student.group._id, { $set: { deadlines: deadline._id } });
           }
-    
+
           await student.save();
         });
       }
-    
+
       // notify supervisors
       const supervisors = await Supervisor.find({});
       if (supervisors && supervisors.length > 0) {
@@ -696,11 +719,11 @@ module.exports.setDeadline = async (req, res) => {
             message: `Deadline Announced for ${submissionType.charAt(0).toUpperCase() + submissionType.slice(1)} ${new Date(deadlineDate).toLocaleString()}`,
             type: "Important"
           });
-          supervisor.deadlines.push(deadline._id);
+          supervisor.deadlines = deadline._id;
           await supervisor.save();
         });
       }
-    };    
+    };
 
     notifyUsers();
 

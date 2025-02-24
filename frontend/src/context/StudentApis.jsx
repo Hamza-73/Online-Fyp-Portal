@@ -170,6 +170,22 @@ export function StudentApis({ children }) {
         }
     };
 
+      const uploadProjectSubmission = async (formData) => {
+
+        try {
+            const response = await fetch(`${server}/student/upload-project`, {
+                method: 'POST',
+                credentials:"include",
+                body: formData
+            });
+            const data = await response.json();
+            console.log("response in uplading file is ", data)
+            return data;
+        } catch (error) {
+            setMessage('Error uploading document');
+        }
+    };
+
     return (
         <StudentContext.Provider
             value={{
@@ -182,7 +198,8 @@ export function StudentApis({ children }) {
                 fetchMyGroup,
                 requestToJoinGroup,
                 registerStudentFromFile,
-                uploadDocument
+                uploadDocument,
+                uploadProjectSubmission
             }}
         >
             {children}

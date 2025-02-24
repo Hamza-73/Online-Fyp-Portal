@@ -5,20 +5,19 @@ import { useParams } from "react-router-dom";
 import { SupervisorContext } from "../../context/SupervisorApis";
 
 export default function GroupDetail() {
-    const [group, setGroup] = useState(null);
-    const [modalData, setModalData] = useState(null);
-    const [projectModalData, setProjectModalData] = useState(null);
-    const [uploadModal, setUploadModal] = useState(false);
-    const [file, setFile] = useState(null);
-    const [comment, setComment] = useState("");
-    const [webLink, setWebLink] = useState("");
-    const [expandedComment, setExpandedComment] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [webLinkError, setWebLinkError] = useState("");
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const { index } = useParams();
+
+    const [group, setGroup] = useState(null);
+    const [studentModal, setStudentModal] = useState(null);
+    const [projectModalData, setProjectModalData] = useState(null);
+    const [expandedComment, setExpandedComment] = useState(null);
     const [selectedDoc, setSelectedDoc] = useState(null);
+    const [viewSubmissionsModal, setViewSubmissionsModal] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [reviewText, setReviewText] = useState("");
+
+    const [activeTask, setActiveTask] = useState(null);
 
     const openReviewModal = (doc) => {
         setSelectedDoc(doc);
@@ -28,19 +27,14 @@ export default function GroupDetail() {
 
     const closeReviewModal = () => {
         setIsModalOpen(false);
-        setSelectedDoc(null);
         setReviewText("");
     };
-
-
-    const { index } = useParams();
 
     const { getMyGroups, reviewDocument } = useContext(SupervisorContext);
 
     useEffect(() => {
         const fetchGroups = async () => {
             const result = await getMyGroups();
-            // console.log("result is- ", result.groups);
             if (result?.success) {
                 setGroup(result.groups);
             }
@@ -48,8 +42,27 @@ export default function GroupDetail() {
         fetchGroups();
     }, []);
 
+    useEffect(() => {
+        if (!group || group.length === 0 || !group[index]) return; // Prevents errors
+
+        const { deadlines } = group[index];
+        if (!deadlines || !deadlines.deadlines) return; // Ensures `deadlines` exists
+
+        const { proposal, documentation, finalReport } = deadlines.deadlines;
+        const { proposal: proposalStatus, documentation: documentationStatus, finalReport: finalReportStatus } = deadlines.status || {};
+
+        if (proposal && new Date(proposal) > new Date() && !proposalStatus) {
+            setActiveTask({ type: "Proposal", date: proposal });
+        } else if (documentation && new Date(documentation) > new Date() && !documentationStatus) {
+            setActiveTask({ type: "Documentation", date: documentation });
+        } else if (finalReport && new Date(finalReport) > new Date() && !finalReportStatus) {
+            setActiveTask({ type: "Final Report", date: finalReport });
+        }
+    }, [group]); // Depend only on `group`, not `group[index]`
+
+
     const openModal = (data) => {
-        setModalData(data);
+        setStudentModal(data);
     };
 
     const openProjectModal = () => {
@@ -61,7 +74,7 @@ export default function GroupDetail() {
     };
 
     const closeModal = () => {
-        setModalData(null);
+        setStudentModal(null);
         setProjectModalData(null);
         setUploadModal(false);
         setWebLink(null);
@@ -114,37 +127,53 @@ export default function GroupDetail() {
         <>
             <Toaster />
             {(group && group[index]) ? (
-                <div className="min-h-screen p-8 bg-gradient-to-r from-blue-50 to-purple-100">
-                    <div className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-xl space-y-8">
+                <div className="min-h-screen p-8 bg-gray-100">
+                    <div className="max-w-9xl mx-auto bg-white p-8 rounded-lg shadow-xl space-y-8">
+
+                        {/* Deadline Badge */}
+                        {activeTask && (
+                            <div className="absolute top-12 right-12 flex flex-col items-end space-y-2">
+                                <span className="bg-red-500 text-white text-md font-semibold px-4 py-2 rounded-full">
+                                    {activeTask.type} Deadline: {new Date(activeTask.date).toLocaleString()}
+                                </span>
+                            </div>
+                        )}
+
                         <header className="text-center space-y-2">
                             <h1 className="text-4xl font-semibold text-gray-800">{group[index].title}</h1>
                         </header>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Group Members Section */}
-                            <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 p-6 rounded-lg shadow-lg">
-                                <h2 className="text-xl font-semibold text-gray-800 mb-4">Group Members</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:px-[10rem]">
+                            <div className="border border-gray-300 p-6 rounded-lg shadow-sm">
+                                <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
+                                    Group Members
+                                </h2>
                                 {group[index].students.map((student) => (
                                     <p
                                         key={student._id}
                                         className="cursor-pointer text-lg flex items-center gap-2 font-medium text-blue-600 hover:underline"
                                         onClick={() => openModal(student)}
                                     >
-                                        <span className="w-2 h-2 bg-blue-600 rounded-full"></span>{student.name} ({student.rollNo})
+                                        <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                                        {student.name} ({student.rollNo})
                                     </p>
                                 ))}
                             </div>
 
-                            {/* Actions Section */}
-                            <div className="flex flex-col justify-center items-center space-y-4">
-                                <button
-                                    className="bg-red-600 text-white px-6 py-3 rounded-full shadow-lg"
-                                    onClick={openProjectModal}
-                                >
+                            {/* Actions */}
+                            <div className="border border-gray-300 p-6 rounded-lg shadow-sm h-full flex flex-col justify-center space-y-4">
+                                <button className="bg-green-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-green-700"
+                                    onClick={() => openProjectModal(true)}>
                                     View Project Details
                                 </button>
+                                <button className="bg-orange-500 text-white px-6 py-3 rounded-md shadow-md hover:bg-orange-600"
+                                    onClick={() => setViewSubmissionsModal(true)}>
+                                    View Submissions
+                                </button>
+
                             </div>
                         </div>
+
 
                         {/* Uploaded Documents Table */}
                         <div className="overflow-x-auto mt-8 max-h-[250px] rounded-lg p-4 shadow-lg">
@@ -232,18 +261,68 @@ export default function GroupDetail() {
                         </div>
                     </div>
 
+                    {/* View Submissions Modal */}
+                    {viewSubmissionsModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                            <div className="bg-white p-8 rounded-lg shadow-xl w-[90%] md:w-[70%] max-h-[80vh] overflow-y-auto">
+                                <h2 className="text-2xl font-semibold text-gray-800 text-center border-b pb-3 mb-4">
+                                    Submissions
+                                </h2>
+                                <div className="space-y-6">
+                                    {/* Submission Sections */}
+                                    {["proposal", "documentation", "project"].map((type) => (
+                                        <div key={type} className="bg-gray-50 p-6 rounded-lg shadow flex flex-col md:flex-row items-center md:items-start">
+                                            {/* Submission Details on the Left */}
+                                            <div className="md:w-2/3 space-y-2">
+                                                <h3 className="text-xl font-semibold text-gray-800 mb-4 capitalize">{type} Submission</h3>
+                                                {group[index].submissions[type].submitted ? (
+                                                    <>
+                                                        <p><strong>Submitted At:</strong> {new Date(group[index].submissions[type].submittedAt).toLocaleString()}</p>
+                                                        <p><strong>Submitted By:</strong> {`${group[index].submissions[type].submittedBy.name} (${group[index].submissions[type].submittedBy.rollNo})`}</p>
+                                                        <p><strong>Document Link:</strong> <a href={group[index].submissions[type].documentLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Document</a></p>
+                                                        <p><strong>Web Link:</strong> {group[index].submissions[type].webLink ? <a href={group[index].submissions[type].webLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{type} Link</a> : "N/A"}</p>
+                                                    </>
+                                                ) : (
+                                                    <p className="text-gray-600">No {type} submitted yet.</p>
+                                                )}
+                                            </div>
+
+                                            {/* PDF Preview on the Right */}
+                                            {group[index].submissions[type].submitted && group[index].submissions[type].documentLink && (
+                                                <div className="md:w-1/3 mt-4 md:mt-0 md:ml-6">
+                                                    <iframe
+                                                        src={group[index].submissions[type].documentLink}
+                                                        className="w-full h-40 md:h-56 border rounded-lg shadow-lg"
+                                                    ></iframe>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                <button
+                                    className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full"
+                                    onClick={() => setViewSubmissionsModal(false)}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Project Details Modal */}
                     {projectModalData && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                            <div className="bg-white p-8 rounded-lg shadow-xl w-[80%] md:w-[50%] relative">
-                                <h2 className="text-3xl font-bold text-gray-800 text-center mb-4">Project Details</h2>
-                                <div className="space-y-3">
+                        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4">
+                            <div className="bg-white p-6 rounded-lg shadow-xl w-[90%] md:w-[50%] lg:w-[40%] max-h-[80vh] overflow-y-auto relative">
+                                <h2 className="text-2xl font-semibold text-gray-800 text-center border-b pb-3 mb-4">
+                                    Project Details
+                                </h2>
+                                <div className="space-y-3 text-gray-700">
                                     <p><strong>Title:</strong> {projectModalData.title}</p>
                                     <p><strong>Scope:</strong> {projectModalData.scope}</p>
                                     <p><strong>Description:</strong> {projectModalData.description}</p>
                                 </div>
                                 <button
-                                    className="mt-6 px-6 py-3 bg-red-500 text-white rounded-full hover:bg-red-600 w-full"
+                                    className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full"
                                     onClick={closeModal}
                                 >
                                     Close
@@ -253,21 +332,23 @@ export default function GroupDetail() {
                     )}
 
                     {/* Student Details Modal */}
-                    {modalData && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                            <div className="bg-white p-8 rounded-lg shadow-xl w-[80%] md:w-[50%] space-y-6 relative">
-                                <h2 className="text-3xl font-bold text-gray-800 text-center">Student Details</h2>
-                                <div className="space-y-4">
-                                    <p><strong>Name:</strong> {modalData.name}</p>
-                                    <p><strong>Roll No:</strong> {modalData.rollNo || "N/A"}</p>
-                                    <p><strong>Semester:</strong> {modalData.semester || "N/A"}</p>
-                                    <p><strong>Email:</strong> {modalData.email || "N/A"}</p>
-                                    <p><strong>Department:</strong> {modalData.department || "N/A"}</p>
-                                    <p><strong>Batch:</strong> {modalData.batch || "N/A"}</p>
+                    {studentModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4">
+                            <div className="bg-white p-6 rounded-lg shadow-xl w-[90%] md:w-[50%] lg:w-[40%] max-h-[80vh] overflow-y-auto relative">
+                                <h2 className="text-2xl font-semibold text-gray-800 text-center border-b pb-3 mb-4">
+                                    Student Details
+                                </h2>
+                                <div className="space-y-3 text-gray-700">
+                                    <p><strong>Name:</strong> {studentModal.name}</p>
+                                    <p><strong>Roll No:</strong> {studentModal.rollNo || "N/A"}</p>
+                                    <p><strong>Semester:</strong> {studentModal.semester || "N/A"}</p>
+                                    <p><strong>Email:</strong> {studentModal.email || "N/A"}</p>
+                                    <p><strong>Department:</strong> {studentModal.department || "N/A"}</p>
+                                    <p><strong>Batch:</strong> {studentModal.batch || "N/A"}</p>
                                 </div>
                                 <button
                                     onClick={closeModal}
-                                    className="w-full mt-6 bg-red-500 text-white py-3 rounded-full hover:bg-red-600"
+                                    className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full"
                                 >
                                     Close
                                 </button>

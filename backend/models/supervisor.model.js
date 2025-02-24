@@ -35,7 +35,7 @@ const supervisorSchema = new Schema({
         seen: { type: Array, default: [] },
         unseen: { type: Array, default: [] }
     },
-    deadlines: [{ type: mongoose.Schema.Types.ObjectId, ref: "Deadline" }] ,
+    deadlines: { type: mongoose.Schema.Types.ObjectId, ref: "Deadline" },
     myIdeas: [{
         projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
         active: { type: Boolean, default: true },

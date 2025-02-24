@@ -496,12 +496,25 @@ module.exports.myGroup = async (req, res) => {
         const student = await Student.findById(req.user.id).populate({
             path: 'group', // Populate the group field
             populate: [
-                { path: 'supervisor', select: 'name email department designation slots' }, 
-                { path: 'project', select: 'title description scope' }, 
+                { path: 'supervisor', select: 'name email department designation slots' },
+                { path: 'project', select: 'title description scope' },
                 { path: 'students', select: 'name email rollNo batch semester department' },
-                { path: 'deadlines' }, 
+                { path: 'deadlines' },
+                { 
+                    path: 'submissions.proposal.submittedBy', 
+                    select: 'name email rollNo' 
+                },
+                { 
+                    path: 'submissions.documentation.submittedBy', 
+                    select: 'name email rollNo' 
+                },
+                { 
+                    path: 'submissions.project.submittedBy', 
+                    select: 'name email rollNo' 
+                },
             ]
         });
+        
 
         // console.log("group is ", student.group);
 
@@ -584,6 +597,107 @@ module.exports.uploadDocument = async (req, res) => {
             message: "File uploaded successfully",
             doc: { webLink: webLink || "", comment: comment || "", docLink }
         });
+
+    } catch (error) {
+        console.error('Error uploading document:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+module.exports.uploadProjectSubmission = async (req, res) => {
+    try {
+        let { submissionType, webLink } = req.body;
+
+        const student = await Student.findById(req.user.id);
+        if (!student) return res.status(404).json({ error: 'Student Not Found' });
+
+        const group = await Group.findById(student.group).populate('deadlines');
+        if (!group) return res.status(404).json({ success: false, message: 'Group Not Found' });
+
+        // Ensure submissions object exists
+        if (!group.submissions) {
+            group.submissions = {};
+        }
+
+        // Ensure submissionType exists within submissions
+        if (!group.submissions[submissionType]) {
+            group.submissions[submissionType] = {
+                submitted: false,
+                submittedAt: null,
+                submittedBy: null,
+                documentLink: "",
+                webLink: "",
+            };
+        }
+
+        const { proposal, documentation, project } = group.deadlines?.deadlines || {};
+        const checkDeadline = (deadlineDate) => new Date(deadlineDate) < new Date();
+
+        if (
+            (submissionType.toLowerCase() === 'proposal' && proposal && checkDeadline(proposal)) ||
+            (submissionType.toLowerCase() === 'documentation' && documentation && checkDeadline(documentation)) ||
+            (submissionType.toLowerCase() === 'project' && project && checkDeadline(project))
+        ) {
+            return res.status(400).json({ success: false, message: `${submissionType.charAt(0).toUpperCase() + submissionType.slice(1)} deadline has passed.` });
+        }
+
+        if (req.files?.doc) {
+            try {
+                // Upload to Cloudinary
+                const result = await cloudinary.uploader.upload(req.files.doc.tempFilePath);
+                const docLink = result.secure_url;
+                console.log("Cloudinary upload result:", docLink);
+
+                // Update the submission in the group object
+                group.submissions[submissionType].documentLink = docLink;
+                group.submissions[submissionType].submittedAt = new Date();
+                group.submissions[submissionType].submittedBy = student.id;
+                group.submissions[submissionType].submitted = true;
+                group.submissions[submissionType].webLink = webLink || "";
+
+                // Mark the submissions field as modified
+                group.markModified(`submissions.${submissionType}`);
+
+                // Save the updated group
+                await group.save();
+
+                console.log("Updated group submission:", group.submissions[submissionType]);
+
+                // Notify students
+                await Promise.all(group.students.map(async (stuId) => {
+                    const studentObj = await Student.findById(stuId);
+                    if (studentObj) {
+                        studentObj.notifications = studentObj.notifications || { seen: [], unseen: [] };
+                        studentObj.notifications.unseen.push({ type: "Important", message: `${submissionType.charAt(0).toUpperCase() + submissionType.slice(1)} has been uploaded by ${student.name}` });
+                        await studentObj.save();
+                    }
+                }));
+
+                // Notify supervisor
+                const supervisor = await Supervisor.findById(group.supervisor);
+                if (supervisor) {
+                    supervisor.notifications = supervisor.notifications || { seen: [], unseen: [] };
+                    supervisor.notifications.unseen.push({
+                        type: "Reminder",
+                        message: `${submissionType.charAt(0).toUpperCase() + submissionType.slice(1)} has been uploaded by ${student.name} for group: ${group.title}`
+                    });
+                    await supervisor.save();
+                }
+
+                // Respond with success
+                return res.status(201).json({
+                    success: true,
+                    message: `${submissionType.charAt(0).toUpperCase() + submissionType.slice(1)} uploaded successfully`,
+                    doc: { webLink: webLink || "", docLink }
+                });
+
+            } catch (error) {
+                console.error("Cloudinary upload error:", error);
+                return res.status(500).json({ success: false, message: "Error uploading document" });
+            }
+        } else {
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
 
     } catch (error) {
         console.error('Error uploading document:', error);

@@ -55,29 +55,25 @@ export default function Notifications() {
     };
 
     return (
-        <div className="p-6">
+        <div className="p-6 bg-gray-100 min-h-screen">
             <Toaster />
-            <h1 className="text-3xl text-center font-bold mb-6">Your Notifications</h1>
+            <h1 className="text-3xl text-center font-bold mb-6 text-gray-800">Notifications</h1>
             {/* Unseen Notifications */}
             <section className="mb-10">
-                <h2 className="text-2xl font-semibold mb-4">Unseen Notifications</h2>
+                {notifications.unseen.length > 0 && <h2 className="text-2xl font-semibold mb-4 text-gray-700">UnSeen Notifications</h2>}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[...notifications.unseen].reverse().map((notification, index) => (
                         <div
                             key={index}
-                            className={`relative flex flex-col justify-between p-5 rounded-xl shadow-lg overflow-hidden transform transition-all hover:scale-105 ${
-                                notification.type === "Important"
-                                    ? "bg-red-500 text-white"
-                                    : "bg-blue-500 text-white"
-                            }`}
+                            className="relative flex flex-col justify-between p-5 rounded-xl shadow-md overflow-hidden transform transition-all hover:scale-105 bg-gray-300 text-gray-900"
                         >
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-4">
-                                    <div className="text-2xl">
+                                    <div className="text-2xl text-gray-600">
                                         {notification.type === "Important" ? (
-                                            <AiOutlineExclamationCircle className="text-red-700" />
+                                            <AiOutlineExclamationCircle />
                                         ) : (
-                                            <AiOutlineCheckCircle className="text-blue-700" />
+                                            <AiOutlineCheckCircle />
                                         )}
                                     </div>
                                     <div>
@@ -88,13 +84,13 @@ export default function Notifications() {
                             </div>
                             <div className="mt-4 flex gap-2">
                                 <button
-                                    className="text-sm px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg transition"
+                                    className="text-sm px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition"
                                     onClick={() => handleMarkSeenNotification(index)}
                                 >
                                     Mark as Seen
                                 </button>
                                 <button
-                                    className="text-sm px-4 py-2 bg-red-600 hover:bg-red-800 text-white rounded-lg"
+                                    className="text-sm px-4 py-2 bg-gray-700 hover:bg-gray-900 text-white rounded-lg"
                                     onClick={() => handleRemoveNotification(index, "unseen")}
                                 >
                                     Remove
@@ -106,24 +102,20 @@ export default function Notifications() {
             </section>
             {/* Seen Notifications */}
             <section>
-                <h2 className="text-2xl font-semibold mb-4">Seen Notifications</h2>
+                {notifications.seen.length > 0 && <h2 className="text-2xl font-semibold mb-4 text-gray-700">Seen Notifications</h2>}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[...notifications.seen].reverse().map((notification, index) => (
                         <div
                             key={index}
-                            className={`relative flex flex-col justify-between p-5 rounded-xl shadow-lg overflow-hidden transform transition-all hover:scale-105 ${
-                                notification.type === "Important"
-                                    ? "bg-red-400 text-white"
-                                    : "bg-blue-400 text-white"
-                            }`}
+                            className="relative flex flex-col justify-between p-5 rounded-xl shadow-md overflow-hidden transform transition-all hover:scale-105 bg-gray-200 text-gray-800"
                         >
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-4">
-                                    <div className="text-2xl">
+                                    <div className="text-2xl text-gray-500">
                                         {notification.type === "Important" ? (
-                                            <AiOutlineExclamationCircle className="text-red-500" />
+                                            <AiOutlineExclamationCircle />
                                         ) : (
-                                            <AiOutlineCheckCircle className="text-blue-500" />
+                                            <AiOutlineCheckCircle />
                                         )}
                                     </div>
                                     <div>
@@ -134,7 +126,7 @@ export default function Notifications() {
                             </div>
                             <div className="mt-4">
                                 <button
-                                    className="text-sm px-4 py-2 bg-white hover:bg-gray-100 text-black rounded-lg"
+                                    className="text-sm px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-lg"
                                     onClick={() => handleRemoveNotification(index, "seen")}
                                 >
                                     Remove

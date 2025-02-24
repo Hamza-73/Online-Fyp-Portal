@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 export default function SupervisorDetail({ userData }) {
   const { supervisorId } = useParams();
   const [supervisor, setSupervisor] = useState(null);
-  const [showForm, setShowForm] = useState(false); // Toggle for showing the form
+  const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     projectTitle: '',
     description: '',
@@ -16,7 +16,6 @@ export default function SupervisorDetail({ userData }) {
   const [message, setMessage] = useState('');
   const { getSupervisorDetail, sendProjectRequest } = useContext(StudentContext);
 
-  // Fetch supervisor details
   useEffect(() => {
     const fetchSupervisor = async () => {
       const response = await getSupervisorDetail(supervisorId);
@@ -27,12 +26,10 @@ export default function SupervisorDetail({ userData }) {
     fetchSupervisor();
   }, [supervisorId]);
 
-  // Handle form input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -45,95 +42,90 @@ export default function SupervisorDetail({ userData }) {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      {/* Supervisor Details */}
-      {supervisor ? (
-        <div className="bg-white shadow-lg p-6 rounded-lg mb-8">
-          <h2 className="flex items-center text-3xl font-semibold mb-4">
-            <FaUser className="mr-3 text-4xl" /> {supervisor.name}
-          </h2>
-          <div className="text-lg space-y-4">
-            <div className="flex flex-wrap justify-between">
-              <p>
-                <span className="font-semibold">Designation:</span> {supervisor.designation}
-              </p>
-              <p>
-                <span className="font-semibold">Department:</span> {supervisor.department}
-              </p>
+    <div className="min-h-screen bg-gray-100 py-12">
+      <div className="max-w-4xl mx-auto px-6">
+        {supervisor ? (
+          <div className="bg-white shadow-md rounded-lg p-8">
+            <h2 className="flex items-center text-3xl font-semibold text-gray-900 mb-6">
+              <FaUser className="mr-3 text-4xl text-gray-700" /> {supervisor.name}
+            </h2>
+
+            <div className="text-lg space-y-4 text-gray-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p><span className="font-medium">Designation:</span> {supervisor.designation}</p>
+                <p><span className="font-medium">Department:</span> {supervisor.department}</p>
+              </div>
+              <p><span className="font-medium">Slots Available:</span> {supervisor.slots}</p>
             </div>
-            <p>
-              <span className="font-semibold">Slots Available:</span> {supervisor.slots}
-            </p>
+
+            {!userData.isGroupMember &&
+              !userData.requests?.rejectedRequests?.includes(supervisorId) && (
+                <div className="text-center mt-8">
+                  <button
+                    onClick={() => setShowForm(!showForm)}
+                    className="px-6 py-3 text-white font-medium bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-300"
+                  >
+                    {showForm ? 'Cancel Request' : 'Send Project Request'}
+                  </button>
+                </div>
+              )}
           </div>
-          {/* Show/Hide Form Button */}
-          {!userData.isGroupMember &&
-            !userData.requests?.rejectedRequests?.includes(supervisorId) && (
-              <div className="text-center mt-6">
+        ) : (
+          <p className="text-center text-gray-500">Loading supervisor details...</p>
+        )}
+
+        {showForm && (
+          <div className="mt-8 bg-white p-8 rounded-lg shadow-md">
+            <h3 className="text-2xl font-semibold text-gray-900 text-center mb-6">Submit Project Request</h3>
+            {message && <p className="text-center text-green-600">{message}</p>}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-lg font-medium text-gray-700">Project Title</label>
+                  <input
+                    type="text"
+                    name="projectTitle"
+                    value={formData.projectTitle}
+                    onChange={handleChange}
+                    className="mt-2 block w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-lg font-medium text-gray-700">Scope</label>
+                  <input
+                    type="text"
+                    name="scope"
+                    value={formData.scope}
+                    onChange={handleChange}
+                    className="mt-2 block w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-lg font-medium text-gray-700">Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows="4"
+                  className="mt-2 block w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  required
+                />
+              </div>
+              <div className="text-center">
                 <button
-                  onClick={() => setShowForm(!showForm)}
-                  className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all ease-in-out duration-300"
+                  type="submit"
+                  className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-300"
                 >
-                  {showForm ? 'Cancel Request' : 'Send Request for Proposal'}
+                  Submit Request
                 </button>
               </div>
-            )}
-        </div>
-      ) : (
-        <p className="text-gray-500 text-center">Loading supervisor details...</p>
-      )}
-
-      {/* Request Form */}
-      {showForm && (
-        <div className="mt-8 bg-white p-8 rounded-lg shadow-lg">
-          <h3 className="text-2xl font-semibold text-center mb-6">Send Project Request</h3>
-          {message && <p className="text-center text-green-600">{message}</p>}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-lg font-medium text-gray-700">Project Title</label>
-                <input
-                  type="text"
-                  name="projectTitle"
-                  value={formData.projectTitle}
-                  onChange={handleChange}
-                  className="mt-2 block w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-lg font-medium text-gray-700">Scope</label>
-                <input
-                  type="text"
-                  name="scope"
-                  value={formData.scope}
-                  onChange={handleChange}
-                  className="mt-2 block w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-600"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-lg font-medium text-gray-700">Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows="4"
-                className="mt-2 block w-full p-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-600"
-                required
-              />
-            </div>
-            <div className="text-center">
-              <button
-                type="submit"
-                className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-all ease-in-out duration-300"
-              >
-                Submit Request
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+            </form>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

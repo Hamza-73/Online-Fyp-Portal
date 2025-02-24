@@ -92,7 +92,7 @@ function Auth() {
             <Particles
                 className="absolute inset-0 z-0"
                 options={{
-                    background: { color: { value: "#5a0006" } },
+                    // background: { color: { value: "#5a0006" } },
                     particles: {
                         number: { value: 100 },
                         color: { value: "#ffc107" },
@@ -109,7 +109,7 @@ function Auth() {
                 <div className="hidden lg:flex w-1/2 text-white flex-col justify-center items-center p-8 relative"
                     style={{
                         background: "rgba(90, 0, 6, 0.7)",
-                        boxShadow: "0px 0px 50px 10px rgba(0, 0, 0, 0.15)",
+                        // boxShadow: "0px 0px 50px 10px rgba(0, 0, 0, 0.15)",
                         backdropFilter: "blur(106px)",
                         WebkitBackdropFilter: "blur(106px)",
                         backgroundImage: "linear-gradient(rgba(0, 0, 91, 1), rgba(90, 0, 6, 1))"
