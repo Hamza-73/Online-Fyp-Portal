@@ -5,7 +5,7 @@ import '../../assets/css/nav.css';
 import { Link, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { IoIosNotifications } from "react-icons/io";
-import { FaBullhorn, FaUsers, FaUser, FaLayerGroup } from "react-icons/fa";
+import { FaBullhorn, FaUsers, FaUser, FaLayerGroup, FaTachometerAlt } from "react-icons/fa";
 
 const StudentNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
   const navigate = useNavigate();
@@ -54,6 +54,9 @@ const StudentNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
       >
         <div className="flex flex-col p-4">
           <img src={LOGO} alt="GCU Logo" className="mb-4 w-20 mx-auto" />
+          <Link to="/student/dashboard" className="flex items-center gap-2 p-2 text-lg hover:bg-gray-300">
+            <FaTachometerAlt size={20} className="text-blue-500" /> Dashboard
+          </Link>
           <Link to="/student/announcements" className="flex items-center gap-2 p-2 text-lg hover:bg-gray-300">
             <FaBullhorn size={20} className="text-blue-500" /> Announcements
           </Link>
@@ -98,9 +101,8 @@ const StudentNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
             className="w-10 h-10 rounded-full cursor-pointer"
           />
           <div className="flex flex-col">
-            
-          <h1 className="text-lg text-gray-800 font-semibold">{userData?.name || 'User'}</h1>
-          <h4>{userData?.rollNo || ''}</h4>
+            <h1 className="text-lg text-gray-800 font-semibold">{userData?.name || 'User'}</h1>
+            <h4>{userData?.rollNo || ''}</h4>
           </div>
           {/* Tooltip */}
           <span className="absolute left-1/2 -bottom-8 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">

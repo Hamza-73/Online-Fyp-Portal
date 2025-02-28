@@ -26,7 +26,7 @@ function Auth() {
                 return;
             }
 
-            navigate(`/${role}/profile`);
+            navigate(`/${role}/announcements`);
         } catch (error) {
             console.log("Invalid auth data, removing...");
             Cookies.remove("auth");

@@ -11,6 +11,7 @@ import Groups from './Groups';
 import Notifications from '../Notifications';
 import Announcements from '../Announcements';
 import Loading from '../Loading';
+import Dashboard from '../Dashboard';
 
 export default function Student() {
   const { getProfile } = useContext(StudentContext);
@@ -61,6 +62,12 @@ export default function Student() {
         />
       )}
       <Routes>
+        <Route
+          path="/dashboard"
+          element={
+            userData ? <Dashboard userData={userData} /> : <Navigate to="/" replace />
+          }
+        />
         <Route
           path="/announcements"
           element={

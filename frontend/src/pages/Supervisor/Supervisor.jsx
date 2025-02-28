@@ -10,6 +10,7 @@ import Announcements from '../Announcements';
 import MyGroups from './MyGroups';
 import GroupDetail from './GroupDetail';
 import Loading from '../Loading';
+import Dashboard from '../Dashboard';
 
 export default function Supervisor() {
   const { getProfile } = useContext(SupervisorContext);
@@ -72,6 +73,16 @@ export default function Supervisor() {
           }`}
       >
         <Routes>
+          <Route
+            path="/dashboard"
+            element={
+              userData ? (
+                <Dashboard userData={userData} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
           <Route
             path="/announcements"
             element={
