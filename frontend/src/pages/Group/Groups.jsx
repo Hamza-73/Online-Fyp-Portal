@@ -4,7 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { SupervisorContext } from "../../context/SupervisorApis";
 import Loading from "../Loading";
 
-export default function Groups({ userData }) {
+export default function Groups({ currentUser }) {
     const { getGroups } = useContext(AuthContext);
     const { setDeadline } = useContext(SupervisorContext);
     const [groups, setGroups] = useState(null);
@@ -12,7 +12,7 @@ export default function Groups({ userData }) {
     const [selectedDeadline, setSelectedDeadline] = useState("");
     const [deadlineDate, setDeadlineDate] = useState("");
 
-    console.log("user is ", userData)
+    console.log("user is ", currentUser)
     useEffect(() => {
         const fetchGroup = async () => {
             const result = await getGroups();
@@ -175,7 +175,7 @@ export default function Groups({ userData }) {
                 )}
 
                 {/* Button to open the modal */}
-                {userData?.isCommittee && (
+                {currentUser?.isCommittee && (
                     <div className="fixed bottom-8 right-8">
                         <button
                             onClick={() => setIsModalOpen(true)}

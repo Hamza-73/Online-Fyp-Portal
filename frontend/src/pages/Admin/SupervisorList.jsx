@@ -7,7 +7,7 @@ import { AuthContext } from '../../context/AuthApis.jsx';
 import { SupervisorContext } from '../../context/SupervisorApis.jsx';
 import { FaUser, FaEnvelope, FaLock, FaBuilding, FaIdCard, FaUserTie, FaFingerprint } from 'react-icons/fa';
 
-export default function SupervisorList({ userData }) {
+export default function SupervisorList({ currentUser }) {
     const navigate = useNavigate();
     const { registerSupervisor } = useContext(AuthContext);
     const { deleteSupervisor, registerSupervisorFromFile } = useContext(SupervisorContext);
@@ -139,7 +139,7 @@ export default function SupervisorList({ userData }) {
                             <th className="py-3 px-6 text-left">Designation</th>
                             <th className="py-3 px-6 text-left">CNIC</th>
                             <th className="py-3 px-6 text-left">Slots</th>
-                            {(userData?.superAdmin || userData?.write_permission) && <th className="py-3 px-6 text-center">Actions</th>}
+                            {(currentUser?.superAdmin || currentUser?.write_permission) && <th className="py-3 px-6 text-center">Actions</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -151,7 +151,7 @@ export default function SupervisorList({ userData }) {
                                 <td className="py-3 px-6">{supervisor.designation}</td>
                                 <td className="py-3 px-6">{supervisor.cnic}</td>
                                 <td className="py-3 px-6">{supervisor.slots}</td>
-                                {(userData?.superAdmin || userData?.write_permission) &&
+                                {(currentUser?.superAdmin || currentUser?.write_permission) &&
                                     <td className="py-3 px-6 text-center flex justify-center space-x-4">
                                         <Link to={`/admin/edit-supervisor-profile/${supervisor._id}`} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                             Edit

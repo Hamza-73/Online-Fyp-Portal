@@ -4,7 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { StudentContext } from "../../context/StudentApis";
 import Loading from "../Loading";
 
-export default function Groups({ userData }) {
+export default function Groups({ currentUser, setCurrentUser }) {
   const { getGroups } = useContext(AuthContext);
   const { requestToJoinGroup } = useContext(StudentContext);
   const [groups, setGroups] = useState(null);
@@ -27,6 +27,11 @@ export default function Groups({ userData }) {
       const response = await requestToJoinGroup(groupId);
       if (response.success) {
         toast.success("Request sent successfully!");
+        setCurrentUser((prevUser) => ({
+          ...prevUser,
+          notifications: response.notifications,
+          requests: response.requests,
+        }));
       } else {
         toast.error(response.message || "Failed to send request.");
       }
@@ -42,11 +47,16 @@ export default function Groups({ userData }) {
   return (
     <div className="min-h-screen bg-gray-100 py-10">
       <div className="max-w-7xl mx-auto px-6">
-        <h1 className="text-4xl font-bold text-center text-gray-700 mb-8">Available Groups</h1>
+        <h1 className="text-4xl font-bold text-center text-gray-700 mb-8">
+          Available Groups
+        </h1>
         <Toaster />
         {groups ? (
           groups.map((supervisor) => (
-            <div key={supervisor.supervisorId} className="mb-12 bg-white shadow-md rounded-lg p-8">
+            <div
+              key={supervisor.supervisorId}
+              className="mb-12 bg-white shadow-md rounded-lg p-8"
+            >
               {/* Supervisor Section */}
               <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
                 {supervisor.supervisorName}
@@ -73,19 +83,27 @@ export default function Groups({ userData }) {
                         group.students.map((student, index) => (
                           <li key={index} className="flex items-center gap-3">
                             <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
-                            <span className="font-medium">{student.name} ({student.rollNo})</span>
+                            <span className="font-medium">
+                              {student.name} ({student.rollNo})
+                            </span>
                           </li>
                         ))
                       ) : (
-                        <li className="text-gray-500 italic text-center">No students</li>
+                        <li className="text-gray-500 italic text-center">
+                          No students
+                        </li>
                       )}
                     </ul>
 
                     {/* Join Group Button */}
-                    {!userData?.isGroupMember &&
+                    {!currentUser?.isGroupMember &&
                       group.students.length < 3 &&
-                      !userData.requests?.rejectedRequests?.includes(supervisor.supervisorId) &&
-                      !userData.requests?.pendingRequests?.includes(supervisor.supervisorId) && (
+                      !currentUser.requests?.rejectedRequests?.includes(
+                        supervisor.supervisorId
+                      ) &&
+                      !currentUser.requests?.pendingRequests?.includes(
+                        supervisor.supervisorId
+                      ) && (
                         <button
                           className="mt-6 w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300"
                           onClick={() => handleJoinRequest(group.groupId)}

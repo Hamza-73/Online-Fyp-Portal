@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { AdminContext } from '../../context/AdminApis';
 
-export default function AdminList({ userData }) {
+export default function AdminList({ currentUser }) {
   const { getAdmins, registerAdmin, deleteAdmin, registerAdminFromFile } =
     useContext(AdminContext);
 
@@ -113,7 +113,7 @@ export default function AdminList({ userData }) {
               <th className="py-3 px-6 text-left">Name</th>
               <th className="py-3 px-6 text-left">Email</th>
               <th className="py-3 px-6 text-left">Username</th>
-              {(userData?.superAdmin || userData?.write_permission) && (
+              {(currentUser?.superAdmin || currentUser?.write_permission) && (
                 <th className="py-3 px-6 text-center">Actions</th>
               )}
             </tr>
@@ -124,7 +124,7 @@ export default function AdminList({ userData }) {
                 <td className="py-3 px-6">{`${admin.fname} ${admin.lname}`}</td>
                 <td className="py-3 px-6">{admin.email}</td>
                 <td className="py-3 px-6">{admin.username}</td>
-                {(userData?.superAdmin || userData?.write_permission) && (
+                {(currentUser?.superAdmin || currentUser?.write_permission) && (
                   <td className="py-3 px-6 text-center flex justify-center space-x-4">
                     <Link
                       to={`/admin/edit-admin-profile/${admin._id}`}

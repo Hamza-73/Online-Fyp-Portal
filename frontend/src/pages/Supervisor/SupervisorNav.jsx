@@ -15,7 +15,7 @@ import {
   FaTachometerAlt
 } from "react-icons/fa";
 
-const SuperviorNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
+const SuperviorNav = ({ currentUser, onLogout, isSidebarOpen, toggleSidebar }) => {
   const navigate = useNavigate();
   const sidebarRef = useRef(null);
 
@@ -84,9 +84,9 @@ const SuperviorNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
             className="p-2 text-lg hover:bg-gray-200 flex items-center gap-2 relative"
           >
             <FaClipboardList className="text-green-600" /> Requests
-            {userData?.projectRequest?.length > 0 && (
+            {currentUser?.projectRequest?.length > 0 && (
               <span className="ml-2 bg-red-500 text-white text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center">
-                {userData?.projectRequest?.length}
+                {currentUser?.projectRequest?.length}
               </span>
             )}
           </Link>
@@ -102,7 +102,7 @@ const SuperviorNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
           >
             <FaUserShield className="text-orange-600" /> Groups Under Me
           </Link>
-          {userData && userData.isCommittee && (
+          {currentUser && currentUser.isCommittee && (
             <Link
               to="/supervisor/schedule-viva"
               className="p-2 text-lg hover:bg-gray-200 flex items-center gap-2"
@@ -128,9 +128,9 @@ const SuperviorNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
           <div className="relative">
             <IoIosNotifications className="text-gray-800 text-4xl cursor-pointer" />
             {/* Badge */}
-            {userData?.notifications?.unseen?.length > 0 && (
+            {currentUser?.notifications?.unseen?.length > 0 && (
               <span className="absolute top-0 right-0 rounded-full bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center">
-                {userData.notifications.unseen.length}
+                {currentUser.notifications.unseen.length}
               </span>
             )}
           </div>
@@ -146,9 +146,9 @@ const SuperviorNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
           />
           <div className="flex flex-col">
             <h1 className="text-lg text-gray-800 font-semibold">
-              {userData?.name || "User"}
+              {currentUser?.name || "User"}
             </h1>
-            <h4>{userData?.username || ""}</h4>
+            <h4>{currentUser?.username || ""}</h4>
           </div>
           {/* Tooltip */}
           <span className="absolute left-1/2 -bottom-8 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">

@@ -4,7 +4,7 @@ const XLSX = require('xlsx');
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/admin.model.js');
 
-const JWT_KEY = process.env.JWT_KEY;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 module.exports.register = [
     // Validation middleware
@@ -199,7 +199,7 @@ module.exports.login = async (req, res) => {
         }
 
         // Create JWT token
-        const token = jwt.sign({ id: admin.id, role: 'admin' }, JWT_KEY, { expiresIn: '48h' });
+        const token = jwt.sign({ id: admin.id, role: 'admin' }, JWT_SECRET, { expiresIn: '48h' });
 
         // Prepare user data (excluding password)
         const userData = { ...admin._doc }; // Spread the document data

@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const path = require('path');
-dotenv.config({ path: path.join(__dirname, '..', 'config', '.env') });
+dotenv.config();
 
 const authenticateToken = (req, res, next) => {
     try {
@@ -23,7 +23,7 @@ const authenticateToken = (req, res, next) => {
             return res.status(401).json({ message: 'Authentication token missing', success: false });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || "hamza1");
+        const decoded = jwt.verify(token, process.env.JWT_SECRET );
         req.user = decoded;
         next();
     } catch (error) {

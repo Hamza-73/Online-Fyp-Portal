@@ -1,91 +1,96 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
-import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
-import AdminNav from './AdminNav';
-import Login from '../Login';
-import Announcements from '../Announcements';
-import AdminList from './AdminList';
-import AdminProfile from './AdminProfile';
-import EditAdminProfile from './EditAdminProfile';
-import EditStudentProfile from './EditStudentProfile';
-import { AdminContext } from '../../context/AdminApis';
-import StudentList from './StudentList';
-import SupervisorList from './SupervisorList';
-import EditSupervisorProfile from './EditSupervisorProfile';
-import '../../index.css'
-import Loading from '../Loading';
+import React, { useState, useEffect, useCallback, useContext } from "react";
+import { Route, Routes, useLocation, Navigate } from "react-router-dom";
+import AdminNav from "./AdminNav";
+import Login from "../Login";
+import Announcements from "../Announcements";
+import AdminList from "./AdminList";
+import AdminProfile from "./AdminProfile";
+import EditAdminProfile from "./EditAdminProfile";
+import EditStudentProfile from "./EditStudentProfile";
+import { AdminContext } from "../../context/AdminApis";
+import StudentList from "./StudentList";
+import SupervisorList from "./SupervisorList";
+import EditSupervisorProfile from "./EditSupervisorProfile";
+import "../../index.css";
+import Loading from "../Loading";
 
 export default function Admin() {
-  const { getProfile } = useContext(AdminContext);
+  const { getProfile, currentUser, setCurrentUser } = useContext(AdminContext);
 
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
 
-  const fetchUserProfile = useCallback(async () => {
-    try {
-      const profileData = await getProfile();
-      setUserData(profileData.admin);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      setUserData(null);
-    }
-    setLoading(false);
-  }, [getProfile]);
-
-  useEffect(() => {
-    fetchUserProfile();
-  }, [fetchUserProfile]);
-
   const handleLogout = useCallback(() => {
-    setUserData(null);
+    setCurrentUser(null);
   }, []);
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
-  const pathsWithoutSidebar = ['/', '/admin/login'];
+  const pathsWithoutSidebar = ["/", "/admin/login"];
   const showSidebar = !pathsWithoutSidebar.includes(location.pathname);
 
-  if (loading) {
-    return <Loading/>;
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        await getProfile();
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+      setIsLoading(false);
+    };
+    
+    fetchUserProfile();
+  }, []);
+
+  if (isLoading) {
+    return <Loading />;
   }
 
   return (
     <div
-      className={`relative top-[60px] transition-all duration-300 ${
-        isSidebarOpen ? 'lg:ml-[250px]' : 'ml-0'
+      className={`relative top-[85px] transition-all duration-300 flex-1 ${
+        showSidebar && isSidebarOpen ? "ml-[250px]" : "ml-0"
       }`}
     >
-      {showSidebar && userData && (
+      {showSidebar && currentUser && (
         <AdminNav
-          userData={userData}
+          currentUser={currentUser}
           onLogout={handleLogout}
           isSidebarOpen={isSidebarOpen}
           toggleSidebar={toggleSidebar}
+          setCurrentUser={setCurrentUser}
         />
       )}
       <Routes>
         <Route
           path="/login"
           element={
-            userData ? (
+            currentUser ? (
               <Navigate to="/admin/announcements" replace />
             ) : (
-              <Login user="admin" onLogin={fetchUserProfile} />
+              <Login user="admin" onLogin={getProfile} />
             )
           }
         />
         <Route
           path="/announcements"
           element={
-            userData ? <Announcements /> : <Navigate to="/admin/login" replace />
+            currentUser ? (
+              <Announcements />
+            ) : (
+              <Navigate to="/admin/login" replace />
+            )
           }
         />
         <Route
           path="/admin-list"
           element={
-            userData ? (
-              <AdminList userData={userData} />
+            currentUser ? (
+              <AdminList
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
             ) : (
               <Navigate to="/admin/login" replace />
             )
@@ -94,8 +99,11 @@ export default function Admin() {
         <Route
           path="/student-list"
           element={
-            userData ? (
-              <StudentList userData={userData} />
+            currentUser ? (
+              <StudentList
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
             ) : (
               <Navigate to="/admin/login" replace />
             )
@@ -104,8 +112,11 @@ export default function Admin() {
         <Route
           path="/supervisor-list"
           element={
-            userData ? (
-              <SupervisorList userData={userData} />
+            currentUser ? (
+              <SupervisorList
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
             ) : (
               <Navigate to="/admin/login" replace />
             )
@@ -114,8 +125,11 @@ export default function Admin() {
         <Route
           path="/profile"
           element={
-            userData ? (
-              <AdminProfile userData={userData} />
+            currentUser ? (
+              <AdminProfile
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
             ) : (
               <Navigate to="/admin/login" replace />
             )
@@ -124,8 +138,11 @@ export default function Admin() {
         <Route
           path="/edit-admin-profile/:id"
           element={
-            userData ? (
-              <EditAdminProfile userData={userData} />
+            currentUser ? (
+              <EditAdminProfile
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
             ) : (
               <Navigate to="/admin/login" replace />
             )
@@ -134,8 +151,11 @@ export default function Admin() {
         <Route
           path="/edit-student-profile/:id"
           element={
-            userData ? (
-              <EditStudentProfile userData={userData} />
+            currentUser ? (
+              <EditStudentProfile
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
             ) : (
               <Navigate to="/admin/login" replace />
             )
@@ -144,8 +164,11 @@ export default function Admin() {
         <Route
           path="/edit-supervisor-profile/:id"
           element={
-            userData ? (
-              <EditSupervisorProfile userData={userData} />
+            currentUser ? (
+              <EditSupervisorProfile
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
             ) : (
               <Navigate to="/admin/login" replace />
             )

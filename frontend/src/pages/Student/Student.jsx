@@ -1,61 +1,61 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import StudentNav from './StudentNav';
-import StudentProfile from './StudentProfile';
-import { StudentContext } from '../../context/StudentApis';
-import Supervisors from './Supervisors';
-import SendRequest from './SendRequest';
-import SupervisorDetail from './SupervisorDetail';
-import MyGroup from './MyGroup';
-import Groups from './Groups';
-import Notifications from '../Notifications';
-import Announcements from '../Announcements';
-import Loading from '../Loading';
-import Dashboard from '../Dashboard';
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import StudentNav from "./StudentNav";
+import StudentProfile from "./StudentProfile";
+import { StudentContext } from "../../context/StudentApis";
+import Supervisors from "./Supervisors";
+import SupervisorDetail from "./SupervisorDetail";
+import MyGroup from "./MyGroup";
+import Groups from "./Groups";
+import Notifications from "../Notifications";
+import Announcements from "../Announcements";
+import Loading from "../Loading";
+import Dashboard from "../Dashboard";
 
 export default function Student() {
-  const { getProfile } = useContext(StudentContext);
+  const { getProfile, currentUser, setCurrentUser } =
+    useContext(StudentContext);
 
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
 
-  const fetchUserProfile = useCallback(async () => {
-    try {
-      const profileData = await getProfile();
-      setUserData(profileData.student);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      setUserData(null);
-    }
-    setLoading(false);
-  }, [getProfile]);
-
-  useEffect(() => {
-    fetchUserProfile();
-  }, [fetchUserProfile]);
-
   const handleLogout = useCallback(() => {
-    setUserData(null);
+    setCurrentUser(null);
   }, []);
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
-  if (loading) {
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        await getProfile();
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+      setIsLoading(false);
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  if (isLoading) {
     return <Loading />;
   }
 
-  const pathsWithoutSidebar = ['/', '/student/login', '/'];
+  const pathsWithoutSidebar = ["/", "/student/login", "/"];
   const showSidebar = !pathsWithoutSidebar.includes(location.pathname);
 
   return (
-    <div className={`relative top-[20px] transition-all duration-300 ${isSidebarOpen ? 'lg:ml-[250px]' : 'ml-0'
+    <div
+      className={`relative top-[20px] transition-all duration-300 ${
+        isSidebarOpen ? "lg:ml-[250px]" : "ml-0"
       }`}
-      style={{ paddingTop: '64px' }}> {/* Adjust padding for header */}
+      style={{ paddingTop: "64px" }}
+    >
       {showSidebar && (
         <StudentNav
-          userData={userData}
+          currentUser={currentUser}
           onLogout={handleLogout}
           isSidebarOpen={isSidebarOpen}
           toggleSidebar={toggleSidebar}
@@ -65,55 +65,105 @@ export default function Student() {
         <Route
           path="/dashboard"
           element={
-            userData ? <Dashboard userData={userData} /> : <Navigate to="/" replace />
+            currentUser ? (
+              <Dashboard
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route
           path="/announcements"
           element={
-            userData ? <Announcements userData={userData} /> : <Navigate to="/" replace />
+            currentUser ? (
+              <Announcements
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route
           path="/profile"
           element={
-            userData ? <StudentProfile userData={userData} /> : <Navigate to="/" replace />
+            currentUser ? (
+              <StudentProfile
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route
           path="/supervisors"
           element={
-            userData ? <Supervisors userData={userData} /> : <Navigate to="/" replace />
-          }
-        />
-        <Route
-          path="/send-project-request"
-          element={
-            userData ? <SendRequest userData={userData} /> : <Navigate to="/" replace />
+            currentUser ? (
+              <Supervisors
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route
           path="/supervisor/:supervisorId"
           element={
-            userData ? <SupervisorDetail userData={userData} /> : <Navigate to="/" replace />
+            currentUser ? (
+              <SupervisorDetail
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route
           path="/my-group"
           element={
-            userData ? <MyGroup userData={userData} /> : <Navigate to="/" replace />
+            currentUser ? (
+              <MyGroup
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route
           path="/groups"
           element={
-            userData ? <Groups userData={userData} /> : <Navigate to="/" replace />
+            currentUser ? (
+              <Groups
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
         <Route
           path="/notifications"
           element={
-            userData ? <Notifications userData={userData} /> : <Navigate to="/" replace />
+            currentUser ? (
+              <Notifications
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
+            ) : (
+              <Navigate to="/" replace />
+            )
           }
         />
       </Routes>

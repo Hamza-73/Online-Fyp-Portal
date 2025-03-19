@@ -1,17 +1,25 @@
-import React, { useEffect, useContext, useState } from 'react';
-import { SupervisorContext } from '../../context/SupervisorApis'; // Adjust the import path if necessary
-import { FaBook, FaUser, FaEnvelope, FaIdBadge, FaSchool, FaBuilding, FaIdCard } from 'react-icons/fa'; // Use relevant icons
-import { toast, Toaster } from 'react-hot-toast';
+import React, { useEffect, useContext, useState } from "react";
+import { SupervisorContext } from "../../context/SupervisorApis"; // Adjust the import path if necessary
+import {
+  FaBook,
+  FaUser,
+  FaEnvelope,
+  FaIdBadge,
+  FaSchool,
+  FaBuilding,
+  FaIdCard,
+} from "react-icons/fa"; // Use relevant icons
+import { toast, Toaster } from "react-hot-toast";
 
-export default function SupervisorProfile() {
+export default function SupervisorProfile({ currentUser, setCurrentUser }) {
   const { getProfile, editSupervisorProfile } = useContext(SupervisorContext); // Fetch supervisor-related APIs from context
   const [supervisor, setSupervisor] = useState({
-    name: '',
-    username: '',
-    cnic: '',
-    email: '',
-    designation: '',
-    department: '',
+    name: "",
+    username: "",
+    cnic: "",
+    email: "",
+    designation: "",
+    department: "",
     slots: 0,
   });
 
@@ -19,22 +27,26 @@ export default function SupervisorProfile() {
   const [formValues, setFormValues] = useState({ ...supervisor });
   const [isSaveDisabled, setIsSaveDisabled] = useState(true);
 
-  // Fetching supervisor supervisor data
   useEffect(() => {
-    const fetchProfile = async () => {
-      const data = await getProfile();
-      console.log("supervisor is ", data)
+    if (currentUser) setFormValues(currentUser);
+  }, [currentUser]);
 
-      if (data.success) {
-        setSupervisor(data.supervisor);
-        setFormValues(data.supervisor);
-      } else {
-        console.error(data.message);
-      }
-    };
+  // Fetching supervisor supervisor data
+  // useEffect(() => {
+  //   const fetchProfile = async () => {
+  //     const data = await getProfile();
+  //     console.log("supervisor is ", data)
 
-    fetchProfile();
-  }, [getProfile]);
+  //     if (data.success) {
+  //       setSupervisor(data.supervisor);
+  //       setFormValues(data.supervisor);
+  //     } else {
+  //       console.error(data.message);
+  //     }
+  //   };
+
+  //   fetchProfile();
+  // }, [getProfile]);
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -46,26 +58,41 @@ export default function SupervisorProfile() {
     }));
 
     const isValid = value.length > 0;
-    setIsSaveDisabled(!isValid || JSON.stringify(supervisor) === JSON.stringify({ ...formValues, [name]: value }));
+    setIsSaveDisabled(
+      !isValid ||
+        JSON.stringify(supervisor) ===
+          JSON.stringify({ ...formValues, [name]: value })
+    );
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    const { name, username, cnic, email, designation, department, slots } = formValues;
+    const { name, username, cnic, email, designation, department, slots } =
+      formValues;
 
-    if (!name || !username || !cnic || !email || !designation || !department || slots < 0) {
-      toast.error('All fields are required and slots must be 0 or greater.');
+    if (
+      !name ||
+      !username ||
+      !cnic ||
+      !email ||
+      !designation ||
+      !department ||
+      slots < 0
+    ) {
+      toast.error("All fields are required and slots must be 0 or greater.");
       return;
     }
 
     const response = await editSupervisorProfile(supervisor._id, formValues);
     if (response.success) {
       setSupervisor(formValues);
-      toast.success('Profile updated successfully!');
+      toast.success("Profile updated successfully!");
       setIsEditing(false);
       setIsSaveDisabled(true);
     } else {
-      toast.error(response.message || 'An error occurred while updating the supervisor.');
+      toast.error(
+        response.message || "An error occurred while updating the supervisor."
+      );
     }
   };
 
@@ -102,7 +129,9 @@ export default function SupervisorProfile() {
           {/* Name and Username */}
           <div className="flex space-x-4">
             <div className="w-1/2">
-              <label className="block text-sm font-medium text-gray-700">Name</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Name
+              </label>
               <div className="flex items-center border border-gray-300 rounded-md shadow-sm">
                 <FaUser className="ml-2 text-gray-500" />
                 <input
@@ -117,7 +146,9 @@ export default function SupervisorProfile() {
             </div>
 
             <div className="w-1/2">
-              <label className="block text-sm font-medium text-gray-700">Username</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Username
+              </label>
               <div className="flex items-center border border-gray-300 rounded-md shadow-sm">
                 <FaIdBadge className="ml-2 text-gray-500" />
                 <input
@@ -135,7 +166,9 @@ export default function SupervisorProfile() {
           {/* Email and CNIC */}
           <div className="flex space-x-4">
             <div className="w-1/2">
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
               <div className="flex items-center border border-gray-300 rounded-md shadow-sm">
                 <FaEnvelope className="ml-2 text-gray-500" />
                 <input
@@ -150,7 +183,9 @@ export default function SupervisorProfile() {
             </div>
 
             <div className="w-1/2">
-              <label className="block text-sm font-medium text-gray-700">CNIC</label>
+              <label className="block text-sm font-medium text-gray-700">
+                CNIC
+              </label>
               <div className="flex items-center border border-gray-300 rounded-md shadow-sm">
                 <FaIdCard className="ml-2 text-gray-500" />
                 <input
@@ -168,7 +203,9 @@ export default function SupervisorProfile() {
           {/* Designation and Department */}
           <div className="flex space-x-4">
             <div className="w-1/2">
-              <label className="block text-sm font-medium text-gray-700">Designation</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Designation
+              </label>
               <div className="flex items-center border border-gray-300 rounded-md shadow-sm">
                 <FaBuilding className="ml-2 text-gray-500" />
                 <input
@@ -183,7 +220,9 @@ export default function SupervisorProfile() {
             </div>
 
             <div className="w-1/2">
-              <label className="block text-sm font-medium text-gray-700">Department</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Department
+              </label>
               <div className="flex items-center border border-gray-300 rounded-md shadow-sm">
                 <FaSchool className="ml-2 text-gray-500" />
                 <input
@@ -200,7 +239,9 @@ export default function SupervisorProfile() {
 
           {/* Slots */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Available Slots</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Available Slots
+            </label>
             <div className="flex items-center border border-gray-300 rounded-md shadow-sm">
               <FaBook className="ml-2 text-gray-500" />
               <input
@@ -209,7 +250,7 @@ export default function SupervisorProfile() {
                 value={formValues.slots}
                 onChange={handleInputChange}
                 className="mt-1 p-2 block w-full border-none focus:outline-none"
-                  disabled={true}
+                disabled={true}
               />
             </div>
           </div>
@@ -226,7 +267,11 @@ export default function SupervisorProfile() {
               </button>
               <button
                 type="submit"
-                className={`${isSaveDisabled ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white px-4 py-2 rounded-md`}
+                className={`${
+                  isSaveDisabled
+                    ? "bg-gray-500 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
+                } text-white px-4 py-2 rounded-md`}
                 disabled={isSaveDisabled}
               >
                 Save

@@ -7,7 +7,7 @@ import Cookies from 'js-cookie';
 import { IoIosNotifications } from "react-icons/io";
 import { FaBullhorn, FaUsers, FaUser, FaLayerGroup, FaTachometerAlt } from "react-icons/fa";
 
-const StudentNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
+const StudentNav = ({ currentUser, onLogout, isSidebarOpen, toggleSidebar }) => {
   const navigate = useNavigate();
   const sidebarRef = useRef(null);
 
@@ -87,9 +87,9 @@ const StudentNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
           <div className="relative">
             <IoIosNotifications className='text-gray-800 text-4xl cursor-pointer' />
             {/* Badge */}
-            {userData?.notifications?.unseen?.length > 0 && (
+            {currentUser?.notifications?.unseen?.length > 0 && (
               <span className="absolute top-0 right-0 rounded-full bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center">
-                {userData.notifications.unseen.length}
+                {currentUser.notifications.unseen.length}
               </span>
             )}
           </div>
@@ -101,8 +101,8 @@ const StudentNav = ({ userData, onLogout, isSidebarOpen, toggleSidebar }) => {
             className="w-10 h-10 rounded-full cursor-pointer"
           />
           <div className="flex flex-col">
-            <h1 className="text-lg text-gray-800 font-semibold">{userData?.name || 'User'}</h1>
-            <h4>{userData?.rollNo || ''}</h4>
+            <h1 className="text-lg text-gray-800 font-semibold">{currentUser?.name || 'User'}</h1>
+            <h4>{currentUser?.rollNo || ''}</h4>
           </div>
           {/* Tooltip */}
           <span className="absolute left-1/2 -bottom-8 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">

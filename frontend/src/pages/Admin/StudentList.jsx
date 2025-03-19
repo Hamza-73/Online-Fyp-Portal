@@ -7,7 +7,7 @@ import { AuthContext } from '../../context/AuthApis.jsx';
 import { StudentContext } from '../../context/StudentApis.jsx';
 import { FaUser, FaEnvelope, FaLock, FaIdCard, FaBook, FaUserFriends, FaBuilding, FaFingerprint } from 'react-icons/fa';
 
-export default function StudentList({ userData }) {
+export default function StudentList({ currentUser }) {
     const navigate = useNavigate();
     const { registerStudent } = useContext(AuthContext);
     const { deleteStudent , registerStudentFromFile} = useContext(StudentContext);
@@ -136,7 +136,7 @@ export default function StudentList({ userData }) {
                             <th className="py-3 px-6 text-left">Semester</th>
                             <th className="py-3 px-6 text-left">Department</th>
                             <th className="py-3 px-6 text-left">Cnic</th> {/* Added CNIC Column */}
-                            {(userData?.superAdmin || userData?.write_permission) && <th className="py-3 px-6 text-center">Actions</th>}
+                            {(currentUser?.superAdmin || currentUser?.write_permission) && <th className="py-3 px-6 text-center">Actions</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -149,7 +149,7 @@ export default function StudentList({ userData }) {
                                 <td className="py-3 px-6">{student.semester}</td>
                                 <td className="py-3 px-6">{student.department}</td>
                                 <td className="py-3 px-6">{student.cnic}</td> {/* Display CNIC */}
-                                {(userData?.superAdmin || userData?.write_permission) &&
+                                {(currentUser?.superAdmin || currentUser?.write_permission) &&
                                     <td className="py-3 px-6 text-center flex justify-center space-x-4">
                                         <Link to={`/admin/edit-student-profile/${student._id}`} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                             Edit

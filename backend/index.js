@@ -10,7 +10,7 @@ const app = express();
 
 
 // Ensure .env file is loaded before anything else
-dotenv.config({ path: path.resolve(__dirname, 'config/.env') });
+dotenv.config();
 
 // Connect to the database
 connectDatabase();
@@ -26,7 +26,7 @@ cloudinary.config({
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: 'http://localhost:5173', 
   methods: 'GET,POST,PUT,DELETE',
   allowedHeaders: 'Content-Type, Authorization',
   credentials: true,

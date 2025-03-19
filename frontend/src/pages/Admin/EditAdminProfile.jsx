@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { toast, Toaster } from 'react-hot-toast';
 import { AdminContext } from '../../context/AdminApis'; // Adjust the import path if necessary
 
-export default function EditAdminProfile({ userData }) {
+export default function EditAdminProfile({ currentUser }) {
   const { id } = useParams(); // Get the admin ID from the URL
   const [admin, setAdmin] = useState({
     fname: '',
@@ -172,11 +172,11 @@ export default function EditAdminProfile({ userData }) {
               name="write_permission"
               checked={admin.write_permission}
               onChange={handleCheckboxChange}
-              disabled={!isEditing || !userData.superAdmin} // Disable the checkbox when not editing or not a superAdmin
+              disabled={!isEditing || !currentUser.superAdmin} // Disable the checkbox when not editing or not a superAdmin
               className="mr-2 h-5 w-5"
             />
             <span className="text-gray-700">
-              {userData.superAdmin 
+              {currentUser.superAdmin 
                 ? 'Can Edit Write Permission'
                 : 'Cannot Edit Write Permission'}
             </span>
