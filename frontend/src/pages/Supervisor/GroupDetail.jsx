@@ -15,6 +15,7 @@ export default function GroupDetail() {
   const [viewSubmissionsModal, setViewSubmissionsModal] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reviewText, setReviewText] = useState("");
+  const [showVivaModal, setShowVivaModal] = useState(false);
 
   const [activeTask, setActiveTask] = useState(null);
 
@@ -86,40 +87,11 @@ export default function GroupDetail() {
   const closeModal = () => {
     setStudentModal(null);
     setProjectModalData(null);
-    setUploadModal(false);
-    setWebLink(null);
-    setWebLinkError(null);
-    setFile(null);
+    setShowVivaModal(false);
   };
 
   const toggleComment = (index) => {
     setExpandedComment(expandedComment === index ? null : index);
-  };
-
-  const renderDocumentPreview = (docLink) => {
-    const fileExtension = docLink.split(".").pop().toLowerCase();
-
-    if (fileExtension === "pdf") {
-      return (
-        <iframe
-          src={docLink}
-          width="100%"
-          height="200px"
-          title="Document Preview"
-          className="border border-gray-300 rounded"
-        />
-      );
-    } else if (["jpg", "jpeg", "png", "gif"].includes(fileExtension)) {
-      return (
-        <img
-          src={docLink}
-          alt="Document Preview"
-          className="max-w-full h-auto rounded"
-        />
-      );
-    } else {
-      return <span>Unsupported file type</span>;
-    }
   };
 
   const handleReviewDocument = async (e) => {
@@ -146,6 +118,21 @@ export default function GroupDetail() {
                   {activeTask.type} Deadline:{" "}
                   {new Date(activeTask.date).toLocaleString()}
                 </span>
+              </div>
+            )}
+
+            {group[index] && group[index].viva && (
+              <div className="absolute top-10 right-10 flex flex-col items-end space-y-2">
+                <span className="bg-red-500 text-white text-md font-semibold px-4 py-2 rounded-full">
+                  Viva for this group has been Scheduled!
+                </span>
+                <button
+                  button
+                  className="bg-blue-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-600"
+                  onClick={() => setShowVivaModal(true)}
+                >
+                  See Viva Details
+                </button>
               </div>
             )}
 
@@ -401,6 +388,56 @@ export default function GroupDetail() {
             </div>
           )}
 
+          {/* View Viva Detail Modal */}
+          {group[index] && group[index].viva && showVivaModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4">
+              <div className="bg-white p-6 rounded-lg shadow-xl w-[90%] md:w-[50%] lg:w-[40%] max-h-[80vh] overflow-y-auto relative">
+                <h2 className="text-2xl font-semibold text-gray-800 text-center border-b pb-4 mb-5">
+                  Viva for Group ({group[index]?.title}) has been Scheduled
+                </h2>
+
+                <div className="space-y-4 px-2 text-gray-700">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <span className="font-medium flex items-center gap-2">
+                      Date and Time:
+                    </span>
+                    <span>
+                      {new Date(group[index].viva.dateTime).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <span className="font-medium flex items-center gap-2">
+                      External:
+                    </span>
+                    <span>{group[index].viva.external.name}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <span className="font-medium flex items-center gap-2">
+                      External's Email:
+                    </span>
+                    <span>{group[index].viva.external.email}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium flex items-center gap-2">
+                      External's Phone:
+                    </span>
+                    <span>{group[index].viva.external.phone}</span>
+                  </div>
+                </div>
+
+                <button
+                  className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full transition duration-200"
+                  onClick={closeModal}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Project Details Modal */}
           {projectModalData && (
             <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4">
@@ -436,7 +473,7 @@ export default function GroupDetail() {
                 <h2 className="text-2xl font-semibold text-gray-800 text-center border-b pb-3 mb-4">
                   Student Details
                 </h2>
-                <div className="space-y-3 text-gray-700">
+                <div className="space-y-3 text-gray-700 lg:grid lg:grid-cols-2">
                   <p>
                     <strong>Name:</strong> {studentModal.name}
                   </p>

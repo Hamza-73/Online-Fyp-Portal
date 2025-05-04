@@ -698,6 +698,9 @@ module.exports.getMyGroups = async (req, res) => {
           path: "submissions.documentation.submittedBy",
           select: "name email rollNo",
         },
+        {
+          path: "viva",
+        },
       ],
     });
 

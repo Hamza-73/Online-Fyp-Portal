@@ -561,13 +561,13 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
             <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4">
               <div className="bg-white p-6 rounded-lg shadow-xl w-[90%] md:w-[50%] lg:w-[40%] max-h-[80vh] overflow-y-auto relative">
                 <h2 className="text-2xl font-semibold text-gray-800 text-center border-b pb-4 mb-5">
-                  🎓 Your Viva is Scheduled — Best of Luck!
+                  Your Viva is Scheduled — Best of Luck!
                 </h2>
 
                 <div className="space-y-4 px-2 text-gray-700">
                   <div className="flex justify-between items-center border-b pb-2">
                     <span className="font-medium flex items-center gap-2">
-                      📅 Date and Time:
+                     Date and Time:
                     </span>
                     <span>
                       {new Date(myGroup.viva.dateTime).toLocaleString()}
@@ -576,7 +576,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
 
                   <div className="flex justify-between items-center">
                     <span className="font-medium flex items-center gap-2">
-                      👨‍🏫 External:
+                      External:
                     </span>
                     <span>{myGroup.viva.external.name}</span>
                   </div>
