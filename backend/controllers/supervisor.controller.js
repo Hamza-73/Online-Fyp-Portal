@@ -8,6 +8,7 @@ const Project = require("../models/project.model.js");
 const Deadline = require("../models/deadline.model.js");
 const Announcement = require("../models/announcement.model.js");
 const XLSX = require("xlsx");
+const Viva = require("../models/viva.model.js");
 
 module.exports.getSupervisors = async (req, res) => {
   try {
@@ -64,12 +65,10 @@ module.exports.getProfile = async (req, res) => {
 
     // Check if admin is SuperAdmin or has write permission
     if (!admin.superAdmin || !admin.write_permission) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Access denied: You do not have the required permissions",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "Access denied: You do not have the required permissions",
+      });
     }
 
     // Fetch the student details by ID, excluding the password field
@@ -124,99 +123,81 @@ module.exports.registerFromFile = async (req, res) => {
 
       // Validate name
       if (!supervisor.name || supervisor.name.length < 3) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: `Name must be at least 3 characters for supervisor at row ${
-              i + 1
-            }`,
-          });
+        return res.status(400).json({
+          success: false,
+          message: `Name must be at least 3 characters for supervisor at row ${
+            i + 1
+          }`,
+        });
       }
 
       // Validate username
       if (!supervisor.username || supervisor.username.length < 3) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: `Username must be at least 3 characters for supervisor at row ${
-              i + 1
-            }`,
-          });
+        return res.status(400).json({
+          success: false,
+          message: `Username must be at least 3 characters for supervisor at row ${
+            i + 1
+          }`,
+        });
       }
 
       // Check for duplicate username in the file
       if (uniqueUsernames.has(supervisor.username)) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: `Duplicate username found in row ${i + 1}: ${
-              supervisor.username
-            }`,
-          });
+        return res.status(400).json({
+          success: false,
+          message: `Duplicate username found in row ${i + 1}: ${
+            supervisor.username
+          }`,
+        });
       }
       uniqueUsernames.add(supervisor.username);
 
       // Validate email format using regex
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!supervisor.email || !emailRegex.test(supervisor.email)) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: `Invalid email format for supervisor at row ${i + 1}`,
-          });
+        return res.status(400).json({
+          success: false,
+          message: `Invalid email format for supervisor at row ${i + 1}`,
+        });
       }
 
       // Check for duplicate email in the file
       if (uniqueEmails.has(supervisor.email)) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: `Duplicate email found in row ${i + 1}: ${
-              supervisor.email
-            }`,
-          });
+        return res.status(400).json({
+          success: false,
+          message: `Duplicate email found in row ${i + 1}: ${supervisor.email}`,
+        });
       }
       uniqueEmails.add(supervisor.email);
 
       // Validate CNIC format (13 digits)
       if (!supervisor.cnic || !/^\d{13}$/.test(supervisor.cnic.toString())) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: `CNIC must be exactly 13 digits for supervisor at row ${
-              i + 1
-            }`,
-          });
+        return res.status(400).json({
+          success: false,
+          message: `CNIC must be exactly 13 digits for supervisor at row ${
+            i + 1
+          }`,
+        });
       }
 
       // Validate password length
       if (!supervisor.password || supervisor.password.length < 6) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: `Password must be at least 6 characters for supervisor at row ${
-              i + 1
-            }`,
-          });
+        return res.status(400).json({
+          success: false,
+          message: `Password must be at least 6 characters for supervisor at row ${
+            i + 1
+          }`,
+        });
       }
 
       // Validate designation and department
       if (!supervisor.designation || !supervisor.department) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: `Designation and department are required for supervisor at row ${
-              i + 1
-            }`,
-          });
+        return res.status(400).json({
+          success: false,
+          message: `Designation and department are required for supervisor at row ${
+            i + 1
+          }`,
+        });
       }
 
       // Check if the supervisor already exists in the database
@@ -224,14 +205,12 @@ module.exports.registerFromFile = async (req, res) => {
         $or: [{ email: supervisor.email }, { username: supervisor.username }],
       });
       if (isValid) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: `Supervisor with email/username already exists in the database at row ${
-              i + 1
-            }.`,
-          });
+        return res.status(400).json({
+          success: false,
+          message: `Supervisor with email/username already exists in the database at row ${
+            i + 1
+          }.`,
+        });
       }
 
       // Hash the password before storing it in the database
@@ -314,26 +293,22 @@ module.exports.editSupervisorProfile = [
       if (!isOwner) {
         loggedInAdmin = await Admin.findById(req.user.id);
         if (!loggedInAdmin) {
-          return res
-            .status(403)
-            .json({
-              success: false,
-              message:
-                "You do not have permission to edit this supervisor's profile.",
-            });
+          return res.status(403).json({
+            success: false,
+            message:
+              "You do not have permission to edit this supervisor's profile.",
+          });
         }
         isAdmin = loggedInAdmin.superAdmin || loggedInAdmin.write_permission;
       }
 
       // If neither owner nor admin, deny access
       if (!isOwner && !isAdmin) {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message:
-              "You do not have permission to edit this supervisor's profile.",
-          });
+        return res.status(403).json({
+          success: false,
+          message:
+            "You do not have permission to edit this supervisor's profile.",
+        });
       }
 
       // Update logic based on user role
@@ -388,12 +363,10 @@ module.exports.deleteSupervisor = async (req, res) => {
 
     // Check if the admin is a super admin
     if (!admin.superAdmin || !admin.write_permission) {
-      return res
-        .status(403)
-        .json({
-          message: `You don't have permission to delete`,
-          success: false,
-        });
+      return res.status(403).json({
+        message: `You don't have permission to delete`,
+        success: false,
+      });
     }
 
     if (!supervisor) {
@@ -618,7 +591,7 @@ module.exports.rejectRequest = async (req, res) => {
     const supervisorId = req.user.id;
 
     const supervisor = await Supervisor.findById(supervisorId).populate(
-      "projectRequest",
+      "projectRequest"
     );
     if (!supervisor) {
       return res
@@ -691,7 +664,9 @@ module.exports.rejectRequest = async (req, res) => {
       // This line sends a response to the client.
       return res.json({
         success: true,
-        message: "Project request rejected successfully", notifications: supervisor.notifications, requests: supervisor.projectRequest 
+        message: "Project request rejected successfully",
+        notifications: supervisor.notifications,
+        requests: supervisor.projectRequest,
       });
     }
   } catch (err) {
@@ -723,10 +698,6 @@ module.exports.getMyGroups = async (req, res) => {
           path: "submissions.documentation.submittedBy",
           select: "name email rollNo",
         },
-        {
-          path: "submissions.project.submittedBy",
-          select: "name email rollNo",
-        },
       ],
     });
 
@@ -745,12 +716,10 @@ module.exports.makeAnncouncement = async (req, res) => {
     const { title, content } = req.body;
     const supervisor = await Supervisor.findById(req.user.id);
     if (!supervisor.isCommittee)
-      return res
-        .status(505)
-        .json({
-          success: false,
-          message: "Only Committee Members can make announcement",
-        });
+      return res.status(505).json({
+        success: false,
+        message: "Only Committee Members can make announcement",
+      });
 
     const announcement = new Announcement({ title, content });
     await announcement.save();
@@ -806,15 +775,13 @@ module.exports.setDeadline = async (req, res) => {
     const supervisor = await Supervisor.findById(req.user.id);
 
     if (!supervisor || !supervisor.isCommittee) {
-      return res
-        .status(500)
-        .json({
-          success: false,
-          message: "Only A Committee Member can Set Deadline",
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Only A Committee Member can Set Deadline",
+      });
     }
 
-    if (!["proposal", "documentation", "project"].includes(submissionType)) {
+    if (!["proposal", "documentation"].includes(submissionType)) {
       return res.status(400).json({ message: "Invalid submission type" });
     }
 
@@ -823,25 +790,21 @@ module.exports.setDeadline = async (req, res) => {
 
     const isDeadlineValid = (type, requiredType) => {
       if (requiredType && !deadline.deadlines[requiredType]) {
-        return res
-          .status(400)
-          .json({
-            message: `${
-              requiredType.charAt(0).toUpperCase() + requiredType.slice(1)
-            } deadline must be set first`,
-          });
+        return res.status(400).json({
+          message: `${
+            requiredType.charAt(0).toUpperCase() + requiredType.slice(1)
+          } deadline must be set first`,
+        });
       }
       if (
         deadline.deadlines[type] &&
         new Date(deadline.deadlines[requiredType]) > new Date()
       ) {
-        return res
-          .status(400)
-          .json({
-            message: `${
-              requiredType.charAt(0).toUpperCase() + requiredType.slice(1)
-            } deadline has not passed yet`,
-          });
+        return res.status(400).json({
+          message: `${
+            requiredType.charAt(0).toUpperCase() + requiredType.slice(1)
+          } deadline has not passed yet`,
+        });
       }
       return true;
     };
@@ -850,13 +813,11 @@ module.exports.setDeadline = async (req, res) => {
       const existingDeadline = deadline.deadlines[type];
 
       if (existingDeadline && new Date(existingDeadline) > new Date()) {
-        return res
-          .status(400)
-          .json({
-            message: `${
-              type.charAt(0).toUpperCase() + type.slice(1)
-            } deadline is not expired yet, cannot be extended`,
-          });
+        return res.status(400).json({
+          message: `${
+            type.charAt(0).toUpperCase() + type.slice(1)
+          } deadline is not expired yet, cannot be extended`,
+        });
       }
 
       if (deadline.deadlines[type]) {
@@ -872,12 +833,9 @@ module.exports.setDeadline = async (req, res) => {
           deadline.deadlines.proposal &&
           new Date(deadline.deadlines.proposal) > new Date()
         ) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "Proposal deadline is already set and has not passed yet",
-            });
+          return res.status(400).json({
+            message: "Proposal deadline is already set and has not passed yet",
+          });
         }
         deadline.deadlines.proposal = deadlineDate;
       },
@@ -887,55 +845,23 @@ module.exports.setDeadline = async (req, res) => {
           deadline.deadlines.documentation &&
           new Date(deadline.deadlines.documentation) > new Date()
         ) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "Documentation deadline is already set and has not passed yet",
-            });
+          return res.status(400).json({
+            message:
+              "Documentation deadline is already set and has not passed yet",
+          });
         }
 
         if (
           deadline.deadlines.proposal &&
           new Date(deadline.deadlines.proposal) > new Date()
         ) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "Proposal deadline has not passed yet, cannot set Documentation deadline",
-            });
+          return res.status(400).json({
+            message:
+              "Proposal deadline has not passed yet, cannot set Documentation deadline",
+          });
         }
 
         extendOrSetDeadline("documentation");
-      },
-      project: () => {
-        if (!isDeadlineValid("project", "documentation")) return;
-        if (
-          deadline.deadlines.project &&
-          new Date(deadline.deadlines.project) > new Date()
-        ) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "Final Report deadline is already set and has not passed yet",
-            });
-        }
-
-        if (
-          deadline.deadlines.documentation &&
-          new Date(deadline.deadlines.documentation) > new Date()
-        ) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "Documentation deadline has not passed yet, cannot set Final Report deadline",
-            });
-        }
-
-        extendOrSetDeadline("project");
       },
     };
 
@@ -1011,6 +937,99 @@ module.exports.setDeadline = async (req, res) => {
     });
   } catch (error) {
     console.log("error in setting deadline ", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ success: false, messsage: "Internal Server Error" });
+  }
+};
+
+module.exports.scheduleViva = async (req, res) => {
+  try {
+    const supervisorId = req.user.id;
+    const { groupId, vivaDateTime, external } = req.body;
+
+    // Check if viva already exists
+    const existingViva = await Viva.findOne({ group: groupId });
+    if (existingViva) {
+      return res.status(400).json({
+        success: false,
+        message: "Viva has already been scheduled for this group",
+      });
+    }
+
+    // Validate supervisor
+    const supervisor = await Supervisor.findById(supervisorId);
+    if (!supervisor || !supervisor.isCommittee) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Fetch group and validate
+    const group = await Group.findById(groupId)
+      .populate("supervisor")
+      .populate("students")
+      .populate("deadlines");
+
+    if (!group) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Group not found" });
+    }
+
+    // Check if both proposal and documentation are submitted
+    const { proposal, documentation } = group.submissions;
+    const isEligible =
+      proposal?.submitted &&
+      proposal?.documentLink &&
+      documentation?.submitted &&
+      documentation?.documentLink;
+
+    if (!isEligible) {
+      return res.status(400).json({
+        success: false,
+        message: "Documentation or Proposal is pending",
+      });
+    }
+
+    // Create and save viva
+    const viva = new Viva({
+      group: group._id,
+      dateTime: vivaDateTime,
+      external,
+    });
+
+    await viva.save();
+
+    // Update group's viva reference
+    group.viva = viva._id;
+    await group.save();
+
+    // Notify students of the group only
+    const students = await Student.find({ group: groupId });
+    const studentNotification = {
+      message: `Your Viva has been scheduled on ${vivaDateTime}`,
+      type: "Important",
+    };
+
+    await Promise.all(
+      students.map((student) => {
+        student.notifications.unseen.push(studentNotification);
+        return student.save();
+      })
+    );
+
+    // Notify supervisor
+    const supervisorNotification = {
+      message: `Viva has been scheduled for group "${group.title}" on ${vivaDateTime}`,
+      type: "Important",
+    };
+    supervisor.notifications.unseen.push(supervisorNotification);
+    await supervisor.save();
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Viva scheduled successfully" });
+  } catch (error) {
+    console.error("Error in scheduling viva:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };

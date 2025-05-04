@@ -14,6 +14,7 @@ export default function Groups({ currentUser, setCurrentUser }) {
     const fetchGroup = async () => {
       setLoading(true);
       const result = await getGroups();
+      console.log("result is ", result)
       if (result.success) {
         setGroups(result.data);
       }

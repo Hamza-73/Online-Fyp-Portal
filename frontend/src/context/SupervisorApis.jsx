@@ -221,6 +221,23 @@ export function SupervisorApis({ children }) {
     }
   };
 
+  const scheduleViva = async (groupId, external, vivaDateTime) => {
+    try {
+      const response = await fetch(`${server}/supervisor/schedule-viva`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ groupId, external, vivaDateTime }),
+      });
+      const result = response.json();
+      return result;
+    } catch (error) {
+      console.log("error in setting deadline ", error);
+    }
+  };
+
   return (
     <SupervisorContext.Provider
       value={{
@@ -238,6 +255,7 @@ export function SupervisorApis({ children }) {
         registerSupervisorFromFile,
         reviewDocument,
         setDeadline,
+        scheduleViva,
       }}
     >
       {children}

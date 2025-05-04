@@ -16,6 +16,7 @@ export default function Groups({ currentUser }) {
     useEffect(() => {
         const fetchGroup = async () => {
             const result = await getGroups();
+            console.log("result is ", result)
             if (result.success) {
                 setGroups(result.data);
             } else {
@@ -139,7 +140,6 @@ export default function Groups({ currentUser }) {
                                     <option value="">Select...</option>
                                     <option value="proposal">Proposal</option>
                                     <option value="documentation">Documentation</option>
-                                    <option value="project">Project</option>
                                 </select>
                             </div>
 

@@ -708,8 +708,7 @@ module.exports.myGroup = async (req, res) => {
           select: "name email rollNo",
         },
         {
-          path: "submissions.project.submittedBy",
-          select: "name email rollNo",
+          path: "viva",
         },
       ],
     });
@@ -978,5 +977,69 @@ module.exports.uploadProjectSubmission = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Internal server error" });
+  }
+};
+
+module.exports.requestMeeting = async (req, res) => {
+  try {
+    const student = await Student.findById(req.user.id);
+    if (!student) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student Not found" });
+    }
+
+    // Fetching the group
+    const group = await Group.findById(student.group);
+    if (!group) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Group Not found" });
+    }
+
+    // Fetching the supervisor
+    const supervisor = await Supervisor.findById(group.supervisor);
+    if (!supervisor) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Supervisor Not found" });
+    }
+
+    // Adding notification to the supervisor
+    supervisor.notifications.unseen.push({
+      type: "Reminder",
+      message: `${student.name} has requested a meeting with you for group ${group.title}`,
+    });
+
+    // Adding notification to all students in the group
+    await Promise.all(
+      group.students.map(async (stu) => {
+        let s = await Student.findById(stu);
+        if (s) {
+          s.notifications.unseen.push({
+            type: "Reminder",
+            message: `Request sent to supervisor for meeting on ${new Date().toLocaleDateString()}`,
+          });
+          await s.save();
+        }
+      })
+    );
+
+    // Saving the supervisor with the new unseen notification
+    await supervisor.save();
+
+    const updatedStudentObj = await Student.findById(req.user.id);
+
+    // Sending a success response to the client
+    return res.json({
+      success: true,
+      message: "Request sent to supervisor for meeting",
+      notifications: updatedStudentObj.notifications,
+    });
+  } catch (error) {
+    console.error("Error sending meeting request", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };

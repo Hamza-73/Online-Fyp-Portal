@@ -194,6 +194,20 @@ export function StudentApis({ children }) {
     }
   };
 
+  const requestMeeting = async () => {
+    try {
+      const response = await fetch(`${server}/student/request-meeting`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error requesting meeting :", error);
+      return { success: false, message: "error requesting meeting try again!" };
+    }
+  };
+
   return (
     <StudentContext.Provider
       value={{
@@ -210,6 +224,7 @@ export function StudentApis({ children }) {
         registerStudentFromFile,
         uploadDocument,
         uploadProjectSubmission,
+        requestMeeting,
       }}
     >
       {children}

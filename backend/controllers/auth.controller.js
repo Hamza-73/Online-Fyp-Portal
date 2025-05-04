@@ -257,7 +257,7 @@ module.exports.getGroups = async (req, res) => {
     const groups = await Group.find({})
       .populate({
         path: "students",
-        select: "name rollNo batch semester email",
+        select: "name rollNo batch semester email department",
       })
       .populate({
         path: "supervisor",
@@ -298,6 +298,7 @@ module.exports.getGroups = async (req, res) => {
         marks: group.marks,
         deadlines: group.deadlines,
         submissions: group.submissions,
+        viva : group.viva
       });
 
       return acc;

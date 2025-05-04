@@ -1,7 +1,6 @@
 // context/AdminApis.js
 import React, { createContext, useState } from 'react';
 import { server } from '../server';
-import toast from 'react-hot-toast';
 
 // Create the 
 export const AuthContext = createContext();

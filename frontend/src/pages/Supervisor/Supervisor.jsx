@@ -11,6 +11,7 @@ import MyGroups from "./MyGroups";
 import GroupDetail from "./GroupDetail";
 import Loading from "../Loading";
 import Dashboard from "../Dashboard";
+import ScheduleViva from "./ScheduleViva";
 
 export default function Supervisor() {
   const { getProfile, currentUser, setCurrentUser } = useContext(SupervisorContext);
@@ -115,6 +116,12 @@ export default function Supervisor() {
             path="/my-groups/:index"
             element={
               currentUser ? <GroupDetail currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <Navigate to="/" replace />
+            }
+          />
+          <Route
+            path="/schedule-viva"
+            element={
+              currentUser ? <ScheduleViva currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <Navigate to="/" replace />
             }
           />
         </Routes>

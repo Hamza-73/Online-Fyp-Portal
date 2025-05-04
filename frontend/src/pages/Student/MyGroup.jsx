@@ -3,8 +3,13 @@ import { StudentContext } from "../../context/StudentApis";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function MyGroup({ currentUser, setCurrentUser }) {
-  const { fetchMyGroup, uploadDocument, uploadProjectSubmission } =
-    useContext(StudentContext);
+  const {
+    fetchMyGroup,
+    uploadDocument,
+    uploadProjectSubmission,
+    requestMeeting,
+  } = useContext(StudentContext);
+
   const [myGroup, setMyGroup] = useState(null);
   const [studentModal, setStudentModal] = useState(null);
   const [projectModalData, setProjectModalData] = useState(null);
@@ -17,6 +22,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
   const [webLinkError, setWebLinkError] = useState("");
   const [submissionModal, setSubmissionModal] = useState(false);
   const [viewSubmissionsModal, setViewSubmissionsModal] = useState(false);
+  const [showVivaModal, setShowVivaModal] = useState(false);
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -48,6 +54,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
     setWebLinkError(null);
     setFile(null);
     setSubmissionModal(false);
+    setShowVivaModal(false);
   };
 
   const handleUploadDocument = async (e) => {
@@ -101,7 +108,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
 
     setLoading(true);
     const response = await uploadProjectSubmission(formData);
-    console.log("response on uploadProjectSubmission ", response)
+    console.log("response on uploadProjectSubmission ", response);
     if (response.success) {
       setLoading(false);
       toast.success(response.message);
@@ -119,13 +126,13 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
           ...prevGroup.submissions,
           [activeTask.type.toLowerCase()]: {
             submitted: true,
-            submittedBy: currentUser,  // Ensure submittedBy updates
+            submittedBy: currentUser, // Ensure submittedBy updates
             submittedAt: new Date().toISOString(),
             documentLink: response.doc?.docLink || "",
             webLink: response.doc?.webLink || webLink || "",
           },
         },
-      }));      
+      }));
 
       // Hide the upload button
       setActiveTask(null);
@@ -138,33 +145,6 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
 
   const toggleComment = (index) => {
     setExpandedComment(expandedComment === index ? null : index);
-  };
-
-  // Function to render document preview
-  const renderDocumentPreview = (docLink) => {
-    const fileExtension = docLink.split(".").pop().toLowerCase();
-
-    if (fileExtension === "pdf") {
-      return (
-        <iframe
-          src={docLink}
-          width="100%"
-          height="200px"
-          title="Document Preview"
-          className="border border-gray-300"
-        />
-      );
-    } else if (["jpg", "jpeg", "png", "gif"].includes(fileExtension)) {
-      return (
-        <img
-          src={docLink}
-          alt="Document Preview"
-          className="max-w-[70%] h-[50%]"
-        />
-      );
-    } else {
-      return <span>Unsupported file type</span>;
-    }
   };
 
   const handleWebLinkChange = (e) => {
@@ -214,6 +194,32 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
     }
   }, [myGroup]); // Updates when myGroup changes
 
+  const handleRequestMeeting = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to send a request to your supervisor for a meeting?"
+    );
+
+    if (!confirmed) return; // Exit if the user cancels
+
+    try {
+      // Optionally show loading state or disable button
+      const result = await requestMeeting();
+
+      if (result.success) {
+        toast.success(result.message);
+        setCurrentUser((prevUser) => ({
+          ...prevUser,
+          notifications: result.notifications,
+        }));
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong");
+    }
+  };
+
   return (
     <>
       <Toaster />
@@ -242,6 +248,21 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
                       Upload {activeTask.type}
                     </button>
                   )}
+              </div>
+            )}
+            {/* Viva Badge */}
+            {myGroup && myGroup.viva && (
+              <div className="absolute top-4 right-4 flex flex-col items-end space-y-2">
+                <span className="bg-red-500 text-white text-md font-semibold px-4 py-2 rounded-full">
+                  You're Viva has been Scheduled!
+                </span>
+                <button
+                  button
+                  className="bg-blue-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-600"
+                  onClick={() => setShowVivaModal(true)}
+                >
+                  See Viva Details
+                </button>
               </div>
             )}
             <header className="text-center space-y-2">
@@ -296,7 +317,10 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
 
               {/* Actions */}
               <div className="border border-gray-300 p-6 rounded-lg shadow-sm h-full flex flex-col justify-center space-y-4">
-                <button className="bg-green-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-green-700">
+                <button
+                  className="bg-green-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-green-700"
+                  onClick={handleRequestMeeting}
+                >
                   Request Meeting
                 </button>
                 <button className="bg-orange-500 text-white px-6 py-3 rounded-md shadow-md hover:bg-orange-600">
@@ -393,7 +417,12 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
                       <td className="px-4 py-2 border border-gray-300 text-center">
                         {doc.webLink ? (
                           <a
-                            href={doc.webLink}
+                            href={
+                              doc.webLink.startsWith("https://") ||
+                              doc.webLink.startsWith("http://")
+                                ? doc.webLink
+                                : `https://${doc.webLink}`
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
@@ -448,7 +477,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
                 </h2>
                 <div className="space-y-6">
                   {/* Submission Sections */}
-                  {["proposal", "documentation", "project"].map((type) => (
+                  {["proposal", "documentation"].map((type) => (
                     <div
                       key={type}
                       className="bg-gray-50 p-6 rounded-lg shadow flex flex-col md:flex-row items-center md:items-start"
@@ -527,6 +556,42 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
             </div>
           )}
 
+          {/* View Viva Detail Modal */}
+          {myGroup && myGroup.viva && showVivaModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4">
+              <div className="bg-white p-6 rounded-lg shadow-xl w-[90%] md:w-[50%] lg:w-[40%] max-h-[80vh] overflow-y-auto relative">
+                <h2 className="text-2xl font-semibold text-gray-800 text-center border-b pb-4 mb-5">
+                  🎓 Your Viva is Scheduled — Best of Luck!
+                </h2>
+
+                <div className="space-y-4 px-2 text-gray-700">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <span className="font-medium flex items-center gap-2">
+                      📅 Date and Time:
+                    </span>
+                    <span>
+                      {new Date(myGroup.viva.dateTime).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium flex items-center gap-2">
+                      👨‍🏫 External:
+                    </span>
+                    <span>{myGroup.viva.external.name}</span>
+                  </div>
+                </div>
+
+                <button
+                  className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full transition duration-200"
+                  onClick={closeModal}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Project Details Modal */}
           {projectModalData && (
             <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4">
@@ -562,7 +627,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
                 <h2 className="text-2xl font-semibold text-gray-800 text-center border-b pb-3 mb-4">
                   Student Details
                 </h2>
-                <div className="space-y-3 text-gray-700">
+                <div className="space-y-3 text-gray-700 lg:grid lg:grid-cols-2">
                   <p>
                     <strong>Name:</strong> {studentModal.name}
                   </p>
@@ -576,7 +641,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
                     <strong>Email:</strong> {studentModal.email || "N/A"}
                   </p>
                   <p>
-                    <strong>Department:</strong>{" "}
+                    <strong>Department:</strong>
                     {studentModal.department || "N/A"}
                   </p>
                   <p>

@@ -107,7 +107,7 @@ const SuperviorNav = ({ currentUser, onLogout, isSidebarOpen, toggleSidebar }) =
               to="/supervisor/schedule-viva"
               className="p-2 text-lg hover:bg-gray-200 flex items-center gap-2"
             >
-              <FaClock className="text-red-600" /> Add Deadline
+              <FaClock className="text-red-600" /> Schedule Viva
             </Link>
           )}
           <button
