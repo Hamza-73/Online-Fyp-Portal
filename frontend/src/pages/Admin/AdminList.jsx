@@ -1,9 +1,9 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { server } from '../../server';
-import toast, { Toaster } from 'react-hot-toast';
-import { Link } from 'react-router-dom';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { AdminContext } from '../../context/AdminApis';
+import React, { useContext, useEffect, useState } from "react";
+import { server } from "../../server";
+import toast, { Toaster } from "react-hot-toast";
+import { Link } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { AdminContext } from "../../context/AdminApis";
 
 export default function AdminList({ currentUser }) {
   const { getAdmins, registerAdmin, deleteAdmin, registerAdminFromFile } =
@@ -13,8 +13,9 @@ export default function AdminList({ currentUser }) {
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchAdmins = async () => {
@@ -22,7 +23,7 @@ export default function AdminList({ currentUser }) {
         const adminsData = await getAdmins();
         setAdmins(adminsData.admin);
       } catch (error) {
-        console.error('Error fetching admins:', error);
+        console.error("Error fetching admins:", error);
       }
     };
     fetchAdmins();
@@ -32,9 +33,9 @@ export default function AdminList({ currentUser }) {
     const response = await deleteAdmin(id);
     if (response.success) {
       setAdmins((prev) => prev.filter((admin) => admin._id !== id));
-      toast.success('Admin deleted successfully');
+      toast.success("Admin deleted successfully");
     } else {
-      toast.error(response.message || 'Failed to delete the admin.');
+      toast.error(response.message || "Failed to delete the admin.");
     }
   };
 
@@ -48,10 +49,10 @@ export default function AdminList({ currentUser }) {
     const response = await registerAdmin(newAdminData);
     if (response.success) {
       setAdmins((prev) => [...prev, response.newAdmin]);
-      toast.success('Admin added successfully');
+      toast.success("Admin added successfully");
       closeModal();
     } else {
-      toast.error(response.message || 'Failed to add admin.');
+      toast.error(response.message || "Failed to add admin.");
     }
   };
 
@@ -61,21 +62,21 @@ export default function AdminList({ currentUser }) {
 
     try {
       const response = await registerAdminFromFile(file);
-      console.log("response is ", response)
+      console.log("response is ", response);
       if (response.success) {
         setAdmins((prev) => [...prev, ...response.newAdmins]);
-        toast.success('Admins registered successfully from file.');
+        toast.success("Admins registered successfully from file.");
       } else {
-        toast.error(response.message || 'Failed to register admins from file.');
+        toast.error(response.message || "Failed to register admins from file.");
       }
     } catch (error) {
-      toast.error(error.message || 'Error processing file.');
+      toast.error(error.message || "Error processing file.");
     }
   };
 
   const handleAddClick = () => {
-    setSelectedAdmin({ fname: '', lname: '', email: '', username: '' });
-    setPassword('');
+    setSelectedAdmin({ fname: "", lname: "", email: "", username: "" });
+    setPassword("");
     setShowModal(true);
     setIsAdding(true);
   };
@@ -83,7 +84,7 @@ export default function AdminList({ currentUser }) {
   const closeModal = () => {
     setShowModal(false);
     setSelectedAdmin(null);
-    setPassword('');
+    setPassword("");
   };
 
   const handleInputChange = (e) => {
@@ -91,59 +92,104 @@ export default function AdminList({ currentUser }) {
     setSelectedAdmin((prev) => ({
       ...prev,
       [name]:
-        name === 'fname' || name === 'lname'
-          ? value.trimStart().replace(/\s{2,}/g, ' ')
+        name === "fname" || name === "lname"
+          ? value.trimStart().replace(/\s{2,}/g, " ")
           : value.trim(),
     }));
   };
 
   const handlePasswordChange = (e) => {
-    setPassword(e.target.value.trimStart().replace(/\s{2,}/g, ' '));
+    setPassword(e.target.value.trimStart().replace(/\s{2,}/g, " "));
   };
+
+  const filteredAdmins = admins.filter((admin) => {
+    const fullName = `${admin.fname} ${admin.lname}`.toLowerCase();
+    return (
+      fullName?.toString().includes(searchQuery.toLowerCase()) ||
+      admin.email
+        ?.toString()
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      admin.username
+        ?.toString()
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+    );
+  });
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-semibold text-center mb-6">Admin List</h1>
       <Toaster />
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg">
-          <thead className="bg-gray-800 text-white">
-            <tr>
-              <th className="py-3 px-6 text-left">Name</th>
-              <th className="py-3 px-6 text-left">Email</th>
-              <th className="py-3 px-6 text-left">Username</th>
-              {(currentUser?.superAdmin || currentUser?.write_permission) && (
-                <th className="py-3 px-6 text-center">Actions</th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {admins.map((admin) => (
-              <tr key={admin._id} className="border-b hover:bg-slate-100">
-                <td className="py-3 px-6">{`${admin.fname} ${admin.lname}`}</td>
-                <td className="py-3 px-6">{admin.email}</td>
-                <td className="py-3 px-6">{admin.username}</td>
+      <div className="container mx-auto px-4 py-8">
+        {/* Search Bar */}
+        <div className="mb-6 relative">
+          <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <svg
+              className="w-5 h-5 text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1116.65 16.65z"
+              />
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Search by name, CNIC, email, or username"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+          />
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white shadow-md rounded-lg">
+            <thead className="bg-gray-800 text-white">
+              <tr>
+                <th className="py-3 px-6 text-left">Name</th>
+                <th className="py-3 px-6 text-left">Email</th>
+                <th className="py-3 px-6 text-left">Username</th>
                 {(currentUser?.superAdmin || currentUser?.write_permission) && (
-                  <td className="py-3 px-6 text-center flex justify-center space-x-4">
-                    <Link
-                      to={`/admin/edit-admin-profile/${admin._id}`}
-                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(admin._id)}
-                      className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                    >
-                      Delete
-                    </button>
-                  </td>
+                  <th className="py-3 px-6 text-center">Actions</th>
                 )}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredAdmins.map((admin) => (
+                <tr key={admin._id} className="border-b hover:bg-slate-100">
+                  <td className="py-3 px-6">{`${admin.fname} ${admin.lname}`}</td>
+                  <td className="py-3 px-6">{admin.email}</td>
+                  <td className="py-3 px-6">{admin.username}</td>
+                  {(currentUser?.superAdmin ||
+                    currentUser?.write_permission) && (
+                    <td className="py-3 px-6 text-center flex justify-center space-x-4">
+                      <Link
+                        to={`/admin/edit-admin-profile/${admin._id}`}
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(admin._id)}
+                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="mt-4 flex justify-between items-center">
@@ -171,18 +217,24 @@ export default function AdminList({ currentUser }) {
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-md p-6 relative">
-            <h2 className="text-xl font-semibold mb-4 text-center">{isAdding ? 'Add Admin' : 'Edit Admin'}</h2>
+            <h2 className="text-xl font-semibold mb-4 text-center">
+              {isAdding ? "Add Admin" : "Edit Admin"}
+            </h2>
             <form onSubmit={handleRegister}>
-              {['fname', 'lname', 'email', 'username'].map((field) => (
+              {["fname", "lname", "email", "username"].map((field) => (
                 <div className="mb-4" key={field}>
-                  <label htmlFor={field} className="block text-sm font-medium text-gray-700">
-                    {field.charAt(0).toUpperCase() + field.slice(1).replace('_', ' ')}
+                  <label
+                    htmlFor={field}
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    {field.charAt(0).toUpperCase() +
+                      field.slice(1).replace("_", " ")}
                   </label>
                   <input
                     type="text"
                     id={field}
                     name={field}
-                    value={selectedAdmin?.[field] || ''}
+                    value={selectedAdmin?.[field] || ""}
                     onChange={handleInputChange}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
@@ -190,12 +242,15 @@ export default function AdminList({ currentUser }) {
                 </div>
               ))}
               <div className="mb-4">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Password
                 </label>
                 <div className="relative">
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     id="password"
                     value={password}
                     onChange={handlePasswordChange}
@@ -223,7 +278,7 @@ export default function AdminList({ currentUser }) {
                   type="submit"
                   className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                 >
-                  {isAdding ? 'Add' : 'Save'}
+                  {isAdding ? "Add" : "Save"}
                 </button>
               </div>
             </form>

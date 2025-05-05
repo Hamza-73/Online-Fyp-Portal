@@ -19,6 +19,7 @@ export default function ScheduleViva() {
   });
   const [vivaDateTime, setVivaDateTime] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchGroups();
@@ -166,6 +167,18 @@ export default function ScheduleViva() {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
+  // Filtered groups based on the search query
+  const filteredGroups = (
+    activeTab === "eligible" ? eligibleGroups : pendingGroups
+  ).filter((group) => {
+    const title = group.groups[0]?.title?.toLowerCase() || "";
+    const supervisor = group.supervisorName?.toLowerCase() || "";
+    return (
+      title.includes(searchQuery.toLowerCase()) ||
+      supervisor.includes(searchQuery.toLowerCase())
+    );
+  });
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-semibold text-center mb-6 text-gray-800">
@@ -206,6 +219,32 @@ export default function ScheduleViva() {
         </button>
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-6 relative">
+        <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <svg
+            className="w-5 h-5 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1116.65 16.65z"
+            />
+          </svg>
+        </span>
+        <input
+          type="text"
+          placeholder="Search by group title or supervisor"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-12 pr-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+        />
+      </div>
+
       {/* Groups List */}
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white shadow-md rounded-lg">
@@ -221,8 +260,8 @@ export default function ScheduleViva() {
             </tr>
           </thead>
           <tbody>
-            {groupsToShow.length > 0 ? (
-              groupsToShow.map((group, index) => (
+            {filteredGroups.length > 0 ? (
+              filteredGroups.map((group, index) => (
                 <tr
                   key={group._id || index}
                   className={`border-b cursor-pointer hover:bg-slate-100 ${
@@ -268,6 +307,24 @@ export default function ScheduleViva() {
           </tbody>
         </table>
       </div>
+
+      {/* Group Details Modal (If needed) */}
+      {groupDetailsModal && selectedGroup && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-2xl p-6 relative">
+            <h2 className="text-xl font-semibold mb-4 text-center">
+              Group Details: {selectedGroup.title}
+            </h2>
+            {/* Add your group details UI here */}
+            <button
+              onClick={() => setGroupDetailsModal(false)}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Viva Modal */}
       {showVivaModal && selectedGroup && (
