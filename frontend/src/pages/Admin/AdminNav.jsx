@@ -80,6 +80,12 @@ const AdminNav = ({ currentUser, onLogout, isSidebarOpen, toggleSidebar }) => {
           >
             Supervisors
           </Link>
+          <Link
+            to="/admin/group-list"
+            className="p-2 text-lg hover:bg-gray-200"
+          >
+            Groups
+          </Link>
           <button
             onClick={handleLogout}
             className="p-2 text-lg text-red-500 hover:bg-gray-200"

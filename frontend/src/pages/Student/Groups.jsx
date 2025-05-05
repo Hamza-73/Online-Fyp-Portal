@@ -14,7 +14,7 @@ export default function Groups({ currentUser, setCurrentUser }) {
     const fetchGroup = async () => {
       setLoading(true);
       const result = await getGroups();
-      console.log("result is ", result)
+      console.log("result is ", result);
       if (result.success) {
         setGroups(result.data);
       }
@@ -53,70 +53,89 @@ export default function Groups({ currentUser, setCurrentUser }) {
         </h1>
         <Toaster />
         {groups ? (
-          groups.map((supervisor) => (
-            <div
-              key={supervisor.supervisorId}
-              className="mb-12 bg-white shadow-md rounded-lg p-8"
-            >
-              {/* Supervisor Section */}
-              <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
-                {supervisor.supervisorName}
-              </h2>
+          groups.map((supervisor) => {
+            const visibleGroups = supervisor.groups.filter(
+              (group) =>
+                group.isApproved || group.groupId === currentUser?.group
+            );
 
-              {/* Groups Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {supervisor.groups.map((group) => (
-                  <div
-                    key={group.groupId}
-                    className="bg-gray-50 shadow-md rounded-lg p-6 hover:shadow-lg transition-all duration-300"
-                  >
-                    {/* Group Title */}
-                    <h3 className="text-xl font-semibold text-blue-800 text-center mb-4">
-                      {group.title || "Untitled Group"}
-                    </h3>
+            if (visibleGroups.length === 0) return null;
 
-                    {/* Divider */}
-                    <hr className="mb-4 border-gray-300" />
+            return (
+              <div
+                key={supervisor.supervisorId}
+                className="mb-12 bg-white shadow-md rounded-lg p-8"
+              >
+                {/* Supervisor Section */}
+                <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
+                  {supervisor.supervisorName}
+                </h2>
 
-                    {/* Students List */}
-                    <ul className="space-y-3 text-gray-700">
-                      {group.students.length > 0 ? (
-                        group.students.map((student, index) => (
-                          <li key={index} className="flex items-center gap-3">
-                            <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
-                            <span className="font-medium">
-                              {student.name} ({student.rollNo})
-                            </span>
+                {/* Groups Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {supervisor.groups.map((group) => (
+                    <div
+                      key={group.groupId}
+                      className="bg-gray-50 shadow-md rounded-lg p-6 hover:shadow-lg transition-all duration-300 relative"
+                    >
+                      {/* Top-right Approval Badge */}
+                      <span
+                        className={`absolute top-0 right-0 text-xs font-semibold px-3 py-1 rounded-full shadow-sm ${
+                          group.isApproved
+                            ? "bg-green-700 text-white"
+                            : "bg-red-700 text-white"
+                        }`}
+                      >
+                        {group.isApproved ? "Approved" : "Pending"}
+                      </span>
+                      {/* Group Title */}
+                      <h3 className="text-xl font-semibold text-blue-800 text-center mb-4">
+                        {group.title || "Untitled Group"}
+                      </h3>
+
+                      {/* Divider */}
+                      <hr className="mb-4 border-gray-300" />
+
+                      {/* Students List */}
+                      <ul className="space-y-3 text-gray-700">
+                        {group.students.length > 0 ? (
+                          group.students.map((student, index) => (
+                            <li key={index} className="flex items-center gap-3">
+                              <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
+                              <span className="font-medium">
+                                {student.name} ({student.rollNo})
+                              </span>
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-gray-500 italic text-center">
+                            No students
                           </li>
-                        ))
-                      ) : (
-                        <li className="text-gray-500 italic text-center">
-                          No students
-                        </li>
-                      )}
-                    </ul>
+                        )}
+                      </ul>
 
-                    {/* Join Group Button */}
-                    {!currentUser?.isGroupMember &&
-                      group.students.length < 3 &&
-                      !currentUser.requests?.rejectedRequests?.includes(
-                        supervisor.supervisorId
-                      ) &&
-                      !currentUser.requests?.pendingRequests?.includes(
-                        supervisor.supervisorId
-                      ) && (
-                        <button
-                          className="mt-6 w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300"
-                          onClick={() => handleJoinRequest(group.groupId)}
-                        >
-                          Request to Join
-                        </button>
-                      )}
-                  </div>
-                ))}
+                      {/* Join Group Button */}
+                      {!currentUser?.isGroupMember &&
+                        group.students.length < 3 &&
+                        !currentUser.requests?.rejectedRequests?.includes(
+                          supervisor.supervisorId
+                        ) &&
+                        !currentUser.requests?.pendingRequests?.includes(
+                          supervisor.supervisorId
+                        ) && (
+                          <button
+                            className="mt-6 w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-all duration-300"
+                            onClick={() => handleJoinRequest(group.groupId)}
+                          >
+                            Request to Join
+                          </button>
+                        )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <p>No Group Found</p>
         )}

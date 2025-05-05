@@ -9,6 +9,7 @@ const groupSchema = new Schema({
   project: { type: Schema.Types.ObjectId, ref: "Project" },
   students: [{ type: Schema.Types.ObjectId, ref: "Student" }],
   createdAt: { type: Date, default: Date.now },
+  isApproved: { type: Boolean, default: false }, //if group is approved or not
   marks: {
     externalMarks: { type: Number, default: 0 },
     internalMarks: { type: Number, default: 0 },

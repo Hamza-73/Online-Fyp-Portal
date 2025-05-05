@@ -167,135 +167,152 @@ export default function GroupDetail() {
                 >
                   View Project Details
                 </button>
-                <button
-                  className="bg-orange-500 text-white px-6 py-3 rounded-md shadow-md hover:bg-orange-600"
-                  onClick={() => setViewSubmissionsModal(true)}
-                >
-                  View Submissions
-                </button>
+                {group[index] && group[index].isApproved && (
+                  <button
+                    className="bg-orange-500 text-white px-6 py-3 rounded-md shadow-md hover:bg-orange-600"
+                    onClick={() => setViewSubmissionsModal(true)}
+                  >
+                    View Submissions
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Uploaded Documents Table */}
-            <div className="overflow-x-auto mt-8 max-h-[250px] rounded-lg p-4 shadow-lg">
-              <h1 className="text-xl font-semibold mb-4 text-center">
-                Uploaded Documents
-              </h1>
-              <table className="min-w-full table-auto border-collapse border border-gray-200 text-center">
-                <thead>
-                  <tr className="bg-gray-200">
-                    <th className="px-4 py-2 border border-gray-300">Sr #</th>
-                    <th className="px-4 py-2 border border-gray-300">
-                      Document
-                    </th>
-                    <th className="px-4 py-2 border border-gray-300">
-                      Comment
-                    </th>
-                    <th className="px-4 py-2 border border-gray-300">
-                      Web Link
-                    </th>
-                    <th className="px-4 py-2 border border-gray-300">
-                      Supervisor's Review
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {group[index].docs?.map((doc, i) => (
-                    <tr key={doc._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 border border-gray-300 text-center">
-                        {i + 1}
-                      </td>
-                      <td className="px-4 py-2 border text-center border-gray-300">
-                        {doc.docLink ? (
-                          <a
-                            href={doc.docLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                          >
-                            View Document
-                          </a>
-                        ) : (
-                          "N/A"
-                        )}
-                      </td>
-                      <td className="px-4 py-2 border border-gray-300 text-center">
-                        {doc.comment?.split(" ").length > 10 ? (
-                          <>
-                            <span>
-                              {expandedComment === i
-                                ? doc.comment
-                                : doc.comment
-                                    ?.split(" ")
-                                    .slice(0, 10)
-                                    .join(" ") + "..."}
-                            </span>
-                            <button
-                              className="text-blue-600 ml-2"
-                              onClick={() => toggleComment(i)}
-                            >
-                              {expandedComment === i
-                                ? "Show Less"
-                                : "Show More"}
-                            </button>
-                          </>
-                        ) : (
-                          <p className="text-center">N/A</p>
-                        )}
-                      </td>
-                      <td className="px-4 py-2 border border-gray-300 text-center">
-                        {doc.webLink ? (
-                          <a
-                            href={
-                              doc.webLink.startsWith("https://") ||
-                              doc.webLink.startsWith("http://")
-                                ? doc.webLink
-                                : `https://${doc.webLink}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                          >
-                            View Link
-                          </a>
-                        ) : (
-                          "N/A"
-                        )}
-                      </td>
-                      <td className="px-4 py-2 border border-gray-300 text-center">
-                        {doc.review ? (
-                          <>
-                            <span>
-                              {expandedComment === i
-                                ? doc.review
-                                : doc.review
-                                    ?.split(" ")
-                                    .slice(0, 10)
-                                    .join(" ") + "..."}
-                            </span>
-                            <button
-                              className="text-blue-600 ml-2"
-                              onClick={() => toggleComment(i)}
-                            >
-                              {expandedComment === i
-                                ? "Show Less"
-                                : "Show More"}
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            className="text-blue-600 underline"
-                            onClick={() => openReviewModal(doc)}
-                          >
-                            Add Review
-                          </button>
-                        )}
-                      </td>
+            {group[index] && group[index].isApproved ? (
+              <div className="overflow-x-auto mt-8 max-h-[250px] rounded-lg p-4 shadow-lg">
+                <h1 className="text-xl font-semibold mb-4 text-center">
+                  Uploaded Documents
+                </h1>
+                <table className="min-w-full table-auto border-collapse border border-gray-200 text-center">
+                  <thead>
+                    <tr className="bg-gray-200">
+                      <th className="px-4 py-2 border border-gray-300">Sr #</th>
+                      <th className="px-4 py-2 border border-gray-300">
+                        Document
+                      </th>
+                      <th className="px-4 py-2 border border-gray-300">
+                        Comment
+                      </th>
+                      <th className="px-4 py-2 border border-gray-300">
+                        Web Link
+                      </th>
+                      <th className="px-4 py-2 border border-gray-300">
+                        Supervisor's Review
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {group[index].docs?.map((doc, i) => (
+                      <tr key={doc._id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border border-gray-300 text-center">
+                          {i + 1}
+                        </td>
+                        <td className="px-4 py-2 border text-center border-gray-300">
+                          {doc.docLink ? (
+                            <a
+                              href={doc.docLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              View Document
+                            </a>
+                          ) : (
+                            "N/A"
+                          )}
+                        </td>
+                        <td className="px-4 py-2 border border-gray-300 text-center">
+                          {doc.comment?.split(" ").length > 10 ? (
+                            <>
+                              <span>
+                                {expandedComment === i
+                                  ? doc.comment
+                                  : doc.comment
+                                      ?.split(" ")
+                                      .slice(0, 10)
+                                      .join(" ") + "..."}
+                              </span>
+                              <button
+                                className="text-blue-600 ml-2"
+                                onClick={() => toggleComment(i)}
+                              >
+                                {expandedComment === i
+                                  ? "Show Less"
+                                  : "Show More"}
+                              </button>
+                            </>
+                          ) : (
+                            <p className="text-center">N/A</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 border border-gray-300 text-center">
+                          {doc.webLink ? (
+                            <a
+                              href={
+                                doc.webLink.startsWith("https://") ||
+                                doc.webLink.startsWith("http://")
+                                  ? doc.webLink
+                                  : `https://${doc.webLink}`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              View Link
+                            </a>
+                          ) : (
+                            "N/A"
+                          )}
+                        </td>
+                        <td className="px-4 py-2 border border-gray-300 text-center">
+                          {doc.review ? (
+                            <>
+                              <span>
+                                {expandedComment === i
+                                  ? doc.review
+                                  : doc.review
+                                      ?.split(" ")
+                                      .slice(0, 10)
+                                      .join(" ") + "..."}
+                              </span>
+                              <button
+                                className="text-blue-600 ml-2"
+                                onClick={() => toggleComment(i)}
+                              >
+                                {expandedComment === i
+                                  ? "Show Less"
+                                  : "Show More"}
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              className="text-blue-600 underline"
+                              onClick={() => openReviewModal(doc)}
+                            >
+                              Add Review
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="flex justify-center items-center h-64">
+                <div className="text-center bg-white p-6 rounded-lg shadow-md border border-gray-200 max-w-xl">
+                  <h2 className="text-lg font-semibold text-red-600 mb-2">
+                    This group is not approved yet!
+                  </h2>
+                  <p className="text-gray-700">
+                    Once this group is approved, you’ll be able to view and
+                    students group progress. Please contact the administrator if
+                    you believe this is an error.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* View Submissions Modal */}

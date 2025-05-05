@@ -171,6 +171,22 @@ export function AdminApis({ children }) {
     }
   };
 
+  const approveOrRejectGroup = async (groupId, isApproved) => {
+    try {
+      const response = await fetch(
+        `${server}/admin/toggle-group-status/${groupId}/${isApproved}`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error("Error changing group status :", error);
+    }
+  };
+
   return (
     <AdminContext.Provider
       value={{
@@ -186,6 +202,7 @@ export function AdminApis({ children }) {
         registerAdminFromFile,
         registerAdmin,
         deleteAdmin,
+        approveOrRejectGroup,
       }}
     >
       {children}

@@ -13,6 +13,7 @@ import SupervisorList from "./SupervisorList";
 import EditSupervisorProfile from "./EditSupervisorProfile";
 import "../../index.css";
 import Loading from "../Loading";
+import GroupList from "./GroupList";
 
 export default function Admin() {
   const { getProfile, currentUser, setCurrentUser } = useContext(AdminContext);
@@ -114,6 +115,19 @@ export default function Admin() {
           element={
             currentUser ? (
               <SupervisorList
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
+            ) : (
+              <Navigate to="/admin/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/group-list"
+          element={
+            currentUser ? (
+              <GroupList
                 currentUser={currentUser}
                 setCurrentUser={setCurrentUser}
               />

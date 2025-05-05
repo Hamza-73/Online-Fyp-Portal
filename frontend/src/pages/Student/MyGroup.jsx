@@ -317,131 +317,99 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
 
               {/* Actions */}
               <div className="border border-gray-300 p-6 rounded-lg shadow-sm h-full flex flex-col justify-center space-y-4">
-                <button
-                  className="bg-green-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-green-700"
-                  onClick={handleRequestMeeting}
-                >
-                  Request Meeting
-                </button>
-                <button className="bg-orange-500 text-white px-6 py-3 rounded-md shadow-md hover:bg-orange-600">
-                  Extension Request
-                </button>
-                <button
-                  className="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700"
-                  onClick={() => setUploadModal(true)}
-                >
-                  Upload Document
-                </button>
-                <button
-                  className="bg-gray-700 text-white px-6 py-3 rounded-md shadow-md hover:bg-gray-800"
-                  onClick={openProjectModal}
-                >
-                  View Project Details
-                </button>
-                <button
-                  className="bg-purple-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-purple-700"
-                  onClick={() => setViewSubmissionsModal(true)}
-                >
-                  View Submissions
-                </button>
+                {myGroup && myGroup.isApproved ? (
+                  <>
+                    <button
+                      className="bg-green-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-green-700"
+                      onClick={handleRequestMeeting}
+                    >
+                      Request Meeting
+                    </button>
+                    <button className="bg-orange-500 text-white px-6 py-3 rounded-md shadow-md hover:bg-orange-600">
+                      Extension Request
+                    </button>
+                    <button
+                      className="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700"
+                      onClick={() => setUploadModal(true)}
+                    >
+                      Upload Document
+                    </button>
+                    <button
+                      className="bg-gray-700 text-white px-6 py-3 rounded-md shadow-md hover:bg-gray-800"
+                      onClick={openProjectModal}
+                    >
+                      View Project Details
+                    </button>
+                    <button
+                      className="bg-purple-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-purple-700"
+                      onClick={() => setViewSubmissionsModal(true)}
+                    >
+                      View Submissions
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="bg-gray-700 text-white px-6 py-3 rounded-md shadow-md hover:bg-gray-800"
+                    onClick={openProjectModal}
+                  >
+                    View Project Details
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Uploaded Documents Table */}
-            <div className="overflow-x-auto mt-8 max-h-[250px]">
-              <h1 className="text-xl text-center font-semibold mb-4">
-                Uploaded Documents
-              </h1>
-              <table className="min-w-full table-auto border-collapse border border-gray-200">
-                <thead>
-                  <tr className="bg-gray-200">
-                    <th className="px-4 py-2 border border-gray-300">Sr #</th>
-                    <th className="px-4 py-2 border border-gray-300">
-                      Document
-                    </th>
-                    <th className="px-4 py-2 border border-gray-300">
-                      Comment
-                    </th>
-                    <th className="px-4 py-2 border border-gray-300">
-                      Web Link
-                    </th>
-                    <th className="px-4 py-2 border border-gray-300">
-                      Supervisor's Review
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {myGroup.docs?.map((doc, index) => (
-                    <tr key={doc._id || index} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 border border-gray-300 text-center">
-                        {index + 1}
-                      </td>
-                      <td className="px-4 py-2 border text-center">
-                        {doc.docLink ? (
-                          <a
-                            href={doc.docLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                          >
-                            View Document
-                          </a>
-                        ) : (
-                          "N/A"
-                        )}
-                      </td>
-                      <td className="px-4 py-2 border border-gray-300 text-center">
-                        {doc.comment?.split(" ").length > 10 ? (
-                          <>
-                            <span>
-                              {expandedComment === index
-                                ? doc.comment
-                                : doc.comment
-                                    ?.split(" ")
-                                    .slice(0, 10)
-                                    .join(" ") + "..."}
-                            </span>
-                            <button
-                              className="text-blue-600 ml-2"
-                              onClick={() => toggleComment(index)}
+            {myGroup && myGroup.isApproved ? (
+              <div className="overflow-x-auto mt-8 max-h-[250px]">
+                <h1 className="text-xl text-center font-semibold mb-4">
+                  Uploaded Documents
+                </h1>
+                <table className="min-w-full table-auto border-collapse border border-gray-200">
+                  <thead>
+                    <tr className="bg-gray-200">
+                      <th className="px-4 py-2 border border-gray-300">Sr #</th>
+                      <th className="px-4 py-2 border border-gray-300">
+                        Document
+                      </th>
+                      <th className="px-4 py-2 border border-gray-300">
+                        Comment
+                      </th>
+                      <th className="px-4 py-2 border border-gray-300">
+                        Web Link
+                      </th>
+                      <th className="px-4 py-2 border border-gray-300">
+                        Supervisor's Review
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {myGroup.docs?.map((doc, index) => (
+                      <tr key={doc._id || index} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border border-gray-300 text-center">
+                          {index + 1}
+                        </td>
+                        <td className="px-4 py-2 border text-center">
+                          {doc.docLink ? (
+                            <a
+                              href={doc.docLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
                             >
-                              {expandedComment === index
-                                ? "Show Less"
-                                : "Show More"}
-                            </button>
-                          </>
-                        ) : (
-                          <p className="text-center">N/A</p>
-                        )}
-                      </td>
-                      <td className="px-4 py-2 border border-gray-300 text-center">
-                        {doc.webLink ? (
-                          <a
-                            href={
-                              doc.webLink.startsWith("https://") ||
-                              doc.webLink.startsWith("http://")
-                                ? doc.webLink
-                                : `https://${doc.webLink}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                          >
-                            View Link
-                          </a>
-                        ) : (
-                          "N/A"
-                        )}
-                      </td>
-                      <td className="px-4 py-2 border border-gray-300 text-center">
-                        {doc.review ? (
-                          doc.review.split(" ").length > 10 ? (
+                              View Document
+                            </a>
+                          ) : (
+                            "N/A"
+                          )}
+                        </td>
+                        <td className="px-4 py-2 border border-gray-300 text-center">
+                          {doc.comment?.split(" ").length > 10 ? (
                             <>
                               <span>
                                 {expandedComment === index
-                                  ? doc.review
-                                  : doc.review
-                                      .split(" ")
+                                  ? doc.comment
+                                  : doc.comment
+                                      ?.split(" ")
                                       .slice(0, 10)
                                       .join(" ") + "..."}
                               </span>
@@ -455,17 +423,75 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
                               </button>
                             </>
                           ) : (
-                            <p>{doc.review}</p> // Display full review if it's less than 10 words
-                          )
-                        ) : (
-                          <p className="text-center">N/A</p>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                            <p className="text-center">N/A</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 border border-gray-300 text-center">
+                          {doc.webLink ? (
+                            <a
+                              href={
+                                doc.webLink.startsWith("https://") ||
+                                doc.webLink.startsWith("http://")
+                                  ? doc.webLink
+                                  : `https://${doc.webLink}`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              View Link
+                            </a>
+                          ) : (
+                            "N/A"
+                          )}
+                        </td>
+                        <td className="px-4 py-2 border border-gray-300 text-center">
+                          {doc.review ? (
+                            doc.review.split(" ").length > 10 ? (
+                              <>
+                                <span>
+                                  {expandedComment === index
+                                    ? doc.review
+                                    : doc.review
+                                        .split(" ")
+                                        .slice(0, 10)
+                                        .join(" ") + "..."}
+                                </span>
+                                <button
+                                  className="text-blue-600 ml-2"
+                                  onClick={() => toggleComment(index)}
+                                >
+                                  {expandedComment === index
+                                    ? "Show Less"
+                                    : "Show More"}
+                                </button>
+                              </>
+                            ) : (
+                              <p>{doc.review}</p> // Display full review if it's less than 10 words
+                            )
+                          ) : (
+                            <p className="text-center">N/A</p>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="flex justify-center items-center h-64">
+                <div className="text-center bg-white p-6 rounded-lg shadow-md border border-gray-200 max-w-xl">
+                  <h2 className="text-lg font-semibold text-red-600 mb-2">
+                    Your group is not approved yet!
+                  </h2>
+                  <p className="text-gray-700">
+                    Once your group is approved, you’ll be able to view and
+                    submit you're progress. Please contact the administrator if
+                    you believe this is an error.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* View Submissions Modal */}
@@ -567,7 +593,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
                 <div className="space-y-4 px-2 text-gray-700">
                   <div className="flex justify-between items-center border-b pb-2">
                     <span className="font-medium flex items-center gap-2">
-                     Date and Time:
+                      Date and Time:
                     </span>
                     <span>
                       {new Date(myGroup.viva.dateTime).toLocaleString()}

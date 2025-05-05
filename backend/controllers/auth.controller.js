@@ -298,7 +298,8 @@ module.exports.getGroups = async (req, res) => {
         marks: group.marks,
         deadlines: group.deadlines,
         submissions: group.submissions,
-        viva : group.viva
+        viva : group.viva,
+        isApproved : group.isApproved,
       });
 
       return acc;
