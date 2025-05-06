@@ -12,10 +12,15 @@ import {
   FaSignOutAlt,
   FaClipboardList,
   FaClock,
-  FaTachometerAlt
+  FaTachometerAlt,
 } from "react-icons/fa";
 
-const SuperviorNav = ({ currentUser, onLogout, isSidebarOpen, toggleSidebar }) => {
+const SuperviorNav = ({
+  currentUser,
+  onLogout,
+  isSidebarOpen,
+  toggleSidebar,
+}) => {
   const navigate = useNavigate();
   const sidebarRef = useRef(null);
 
@@ -26,6 +31,8 @@ const SuperviorNav = ({ currentUser, onLogout, isSidebarOpen, toggleSidebar }) =
     }
     navigate("/");
   };
+
+  const pathName = window.location.pathname;
 
   return (
     <header className="fixed top-0 left-0 w-full bg-gray-200 text-gray-800 z-40">
@@ -69,19 +76,25 @@ const SuperviorNav = ({ currentUser, onLogout, isSidebarOpen, toggleSidebar }) =
           <img src={LOGO} alt="GCU Logo" className="mb-4 w-20 mx-auto" />
           <Link
             to="/supervisor/dashboard"
-            className="flex items-center gap-2 p-2 text-lg hover:bg-gray-300"
+            className={`flex items-center gap-2 p-2 text-lg ${
+              pathName.includes("/supervisor/dashboard") && "bg-gray-200"
+            } hover:bg-gray-200`}
           >
             <FaTachometerAlt size={20} className="text-blue-500" /> Dashboard
           </Link>
           <Link
             to="/supervisor/announcements"
-            className="p-2 text-lg hover:bg-gray-200 flex items-center gap-2"
+            className={`p-2 text-lg flex items-center gap-2 ${
+              pathName.includes("/supervisor/announcements") && "bg-gray-200"
+            } hover:bg-gray-200`}
           >
             <FaBullhorn className="text-blue-600" /> Announcements
           </Link>
           <Link
             to="/supervisor/requests"
-            className="p-2 text-lg hover:bg-gray-200 flex items-center gap-2 relative"
+            className={`p-2 text-lg flex items-center gap-2 relative ${
+              pathName.includes("/supervisor/requests") && "bg-gray-200"
+            } hover:bg-gray-200`}
           >
             <FaClipboardList className="text-green-600" /> Requests
             {currentUser?.projectRequest?.length > 0 && (
@@ -92,20 +105,26 @@ const SuperviorNav = ({ currentUser, onLogout, isSidebarOpen, toggleSidebar }) =
           </Link>
           <Link
             to="/supervisor/groups"
-            className="p-2 text-lg hover:bg-gray-200 flex items-center gap-2"
+            className={`p-2 text-lg flex items-center gap-2 ${
+              pathName.includes("/supervisor/groups") && "bg-gray-200"
+            } hover:bg-gray-200`}
           >
             <FaUsers className="text-purple-600" /> Groups
           </Link>
           <Link
             to="/supervisor/my-groups"
-            className="p-2 text-lg hover:bg-gray-200 flex items-center gap-2"
+            className={`p-2 text-lg flex items-center gap-2 ${
+              pathName.includes("/supervisor/my-groups") && "bg-gray-200"
+            } hover:bg-gray-200`}
           >
             <FaUserShield className="text-orange-600" /> Groups Under Me
           </Link>
           {currentUser && currentUser.isCommittee && (
             <Link
               to="/supervisor/schedule-viva"
-              className="p-2 text-lg hover:bg-gray-200 flex items-center gap-2"
+              className={`p-2 text-lg flex items-center gap-2 ${
+                pathName.includes("/supervisor/schedule-viva") && "bg-gray-200"
+              } hover:bg-gray-200`}
             >
               <FaClock className="text-red-600" /> Schedule Viva
             </Link>

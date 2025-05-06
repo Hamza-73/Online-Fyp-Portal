@@ -7,6 +7,7 @@ import Cookies from "js-cookie";
 const AdminNav = ({ currentUser, onLogout, isSidebarOpen, toggleSidebar }) => {
   const navigate = useNavigate();
   const sidebarRef = useRef(null);
+  const pathName = window.location.pathname;
 
   const handleLogout = () => {
     Cookies.remove("auth");
@@ -58,31 +59,41 @@ const AdminNav = ({ currentUser, onLogout, isSidebarOpen, toggleSidebar }) => {
           <img src={LOGO} alt="GCU Logo" className="mb-4 w-20 mx-auto" />
           <Link
             to="/admin/announcements"
-            className="p-2 text-lg hover:bg-gray-200"
+            className={`p-2 text-lg ${
+              pathName.includes("/admin/announcements") && "bg-gray-200"
+            } hover:bg-gray-200`}
           >
             Announcements
           </Link>
           <Link
             to="/admin/admin-list"
-            className="p-2 text-lg hover:bg-gray-200"
+            className={`p-2 text-lg ${
+              pathName.includes("/admin/admin-list") && "bg-gray-200"
+            } hover:bg-gray-200`}
           >
             Admin
           </Link>
           <Link
             to="/admin/student-list"
-            className="p-2 text-lg hover:bg-gray-200"
+            className={`p-2 text-lg ${
+              pathName.includes("/admin/student-list") && "bg-gray-200"
+            } hover:bg-gray-200`}
           >
             Students
           </Link>
           <Link
             to="/admin/supervisor-list"
-            className="p-2 text-lg hover:bg-gray-200"
+            className={`p-2 text-lg ${
+              pathName.includes("/admin/supervisor-list") && "bg-gray-200"
+            } hover:bg-gray-200`}
           >
             Supervisors
           </Link>
           <Link
             to="/admin/group-list"
-            className="p-2 text-lg hover:bg-gray-200"
+            className={`p-2 text-lg ${
+              pathName.includes("/admin/group-list") && "bg-gray-200"
+            } hover:bg-gray-200`}
           >
             Groups
           </Link>
