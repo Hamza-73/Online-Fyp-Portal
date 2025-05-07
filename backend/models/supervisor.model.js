@@ -41,23 +41,6 @@ const supervisorSchema = new Schema({
         active: { type: Boolean, default: true },
         createdAt: { type: Date, default: Date.now }
     }],
-    // meeting: [{ type: Schema.Types.ObjectId, ref: 'Meeting' }],
-    // login: { type: Number, default: 0 },
-    // isLogin: { type: Boolean, default: false },
-    // isAdmin: { type: Boolean, default: false },
-    // isCommittee: { type: Boolean, default: false },
-    // extensionRequest: [{
-    //     isresponded: { type: Boolean, default: false },
-    //     student: { type: String },
-    //     reason: { type: String },
-    //     group: { type: String },
-    //     requestId: { type: Schema.Types.ObjectId }
-    // }],
-    // requests: [{
-    //     group: { type: String },
-    //     supervisor: { type: String },
-    //     reason: { type: String }
-    // }],
 });
 
 // Pre-save middleware to hash the password

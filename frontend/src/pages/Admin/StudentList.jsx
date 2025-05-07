@@ -98,7 +98,7 @@ export default function StudentList({ currentUser }) {
       const response = await registerStudent(studentData);
       if (response.success) {
         toast.success("Student registered successfully!");
-        getStudents();
+        setStudents((prev) => [...prev, studentData]);
         setShowModal(false);
         setSelectedStudent({}); // Reset selected student
       } else {

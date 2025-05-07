@@ -99,7 +99,7 @@ export default function SupervisorList({ currentUser }) {
       const response = await registerSupervisor(supervisorData);
       if (response.success) {
         toast.success("Supervisor registered successfully!");
-        getSupervisors();
+        setSupervisors((prev) => [...prev, supervisorData]);
         setShowModal(false);
         setSelectedSupervisor({}); // Reset selected supervisor
       } else {

@@ -545,6 +545,17 @@ module.exports.approveOrRejectGroup = async (req, res) => {
         .json({ success: false, message: "Group Not Found", group });
     }
 
+    if (
+      group?.students?.length === 0 ||
+      group?.students === undefined ||
+      group?.students?.length < 2
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Group must have at least 2 students",
+      });
+    }
+
     group.isApproved = isApproved;
 
     //notify group students

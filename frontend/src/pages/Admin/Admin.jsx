@@ -14,6 +14,7 @@ import EditSupervisorProfile from "./EditSupervisorProfile";
 import "../../index.css";
 import Loading from "../Loading";
 import GroupList from "./GroupList";
+import ExternalList from "./ExternalList";
 
 export default function Admin() {
   const { getProfile, currentUser, setCurrentUser } = useContext(AdminContext);
@@ -40,7 +41,7 @@ export default function Admin() {
       }
       setIsLoading(false);
     };
-    
+
     fetchUserProfile();
   }, []);
 
@@ -180,6 +181,19 @@ export default function Admin() {
           element={
             currentUser ? (
               <EditSupervisorProfile
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+              />
+            ) : (
+              <Navigate to="/admin/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/external-list"
+          element={
+            currentUser ? (
+              <ExternalList
                 currentUser={currentUser}
                 setCurrentUser={setCurrentUser}
               />

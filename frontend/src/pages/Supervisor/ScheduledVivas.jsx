@@ -3,8 +3,8 @@ import { AuthContext } from "../../context/AuthApis";
 import { SupervisorContext } from "../../context/SupervisorApis";
 import { toast, Toaster } from "react-hot-toast";
 
-export default function ScheduleViva() {
-  const { getGroups, getExternals } = useContext(AuthContext);
+export default function ScheduleVivas() {
+  const { getGroups } = useContext(AuthContext);
   const { scheduleViva } = useContext(SupervisorContext);
   const [eligibleGroups, setEligibleGroups] = useState([]);
   const [pendingGroups, setPendingGroups] = useState([]);
@@ -12,15 +12,17 @@ export default function ScheduleViva() {
   const [showVivaModal, setShowVivaModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [groupDetailsModal, setGroupDetailsModal] = useState(false);
-  const [externals, setExternals] = useState(null);
+  const [external, setExternal] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
   const [vivaDateTime, setVivaDateTime] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedExternal, setSelectedExternal] = useState("");
 
   useEffect(() => {
     fetchGroups();
-    fetchExternals();
   }, []);
 
   const fetchGroups = async () => {
@@ -54,16 +56,6 @@ export default function ScheduleViva() {
     }
   };
 
-  const fetchExternals = async () => {
-    try {
-      const response = await getExternals();
-      setExternals(response.externals);
-    } catch (error) {
-      toast.error("Error fetching externals");
-      console.error("Error fetching externals:", error);
-    }
-  };
-
   const handleScheduleClick = (group) => {
     // Store the whole group object to ensure we have all the needed data
     setSelectedGroup(group);
@@ -73,15 +65,37 @@ export default function ScheduleViva() {
   const closeModal = () => {
     setSelectedGroup(null);
     setShowVivaModal(false);
+    // Reset form data
+    setExternal({
+      name: "",
+      email: "",
+      phone: "",
+    });
     setVivaDateTime("");
+  };
+
+  const handleChangeExternal = (e) => {
+    const { name, value } = e.target;
+    setExternal((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const groupsToShow =
     activeTab === "eligible" ? eligibleGroups : pendingGroups;
 
   const validateForm = () => {
-    if (!selectedExternal) {
-      toast.error("External examiner is required");
+    if (!external.name.trim()) {
+      toast.error("External examiner name is required");
+      return false;
+    }
+    if (!external.email.trim()) {
+      toast.error("External examiner email is required");
+      return false;
+    }
+    if (!external.phone.trim()) {
+      toast.error("External examiner phone is required");
       return false;
     }
     if (!vivaDateTime) {
@@ -116,11 +130,7 @@ export default function ScheduleViva() {
         return;
       }
 
-      const result = await scheduleViva(
-        groupId,
-        selectedExternal,
-        vivaDateTime
-      );
+      const result = await scheduleViva(groupId, external, vivaDateTime);
 
       console.log("result is ", result);
 
@@ -317,7 +327,7 @@ export default function ScheduleViva() {
       )}
 
       {/* Viva Modal */}
-      {showVivaModal && selectedGroup && externals && (
+      {showVivaModal && selectedGroup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white rounded-lg w-full max-w-lg p-6 relative">
             <h2 className="text-xl font-semibold mb-4 text-center">
@@ -327,47 +337,52 @@ export default function ScheduleViva() {
               Group:{" "}
               <span className="text-blue-600">{selectedGroup.title}</span>
             </p>
-
             <form onSubmit={handleScheduleViva} className="grid gap-4">
-              {/* External Examiner Dropdown */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select External Examiner
-                </label>
-                <select
-                  value={selectedExternal}
-                  onChange={(e) => setSelectedExternal(e.target.value)}
-                  className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  required
-                >
-                  <option value="">Select an external</option>
-                  {externals.map((external) => (
-                    <option key={external._id} value={external._id}>
-                      {external.name} ({external.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <input
+                type="text"
+                name="name"
+                value={external.name}
+                placeholder="External Name"
+                className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                onChange={handleChangeExternal}
+                required
+              />
+              <input
+                type="email"
+                name="email"
+                value={external.email}
+                placeholder="External Email"
+                className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                onChange={handleChangeExternal}
+                required
+              />
+              <input
+                type="tel"
+                name="phone"
+                value={external.phone}
+                placeholder="External Phone Number"
+                className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                onChange={handleChangeExternal}
+                required
+              />
 
               {/* Date and Time Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date & Time
+                    Date
                   </label>
                   <input
-                    type="datetime-local"
+                    type="dateTime-local"
                     name="vivaDateTime"
                     value={vivaDateTime}
                     onChange={handleVivaDateTimeChange}
-                    min={getCurrentDateTime()} // Prevent selecting past dates
+                    min={getCurrentDateTime()} // Disable past dates
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
                   />
                 </div>
               </div>
 
-              {/* Buttons */}
               <div className="flex justify-end gap-4 mt-4">
                 <button
                   type="button"

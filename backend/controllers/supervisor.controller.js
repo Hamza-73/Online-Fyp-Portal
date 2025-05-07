@@ -1036,3 +1036,38 @@ module.exports.scheduleViva = async (req, res) => {
       .json({ success: false, message: "Internal Server Error" });
   }
 };
+
+module.exports.getVivas = async (req, res) => {
+  try {
+    const supervisorId = req.user.id;
+
+    // Validate supervisor
+    const supervisor = await Supervisor.findById(supervisorId);
+    if (!supervisor || !supervisor.isCommittee) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Fetch all vivas and deeply populate group and students
+    const vivas = await Viva.find({}).populate({
+      path: "group",
+      populate: {
+        path: "students",
+        model: "Student",
+      },
+    });
+
+    if (!vivas || vivas.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No vivas scheduled yet",
+      });
+    }
+
+    return res.status(200).json({ success: true, vivas });
+  } catch (error) {
+    console.error("Error fetching vivas:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};

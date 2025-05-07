@@ -90,6 +90,14 @@ const AdminNav = ({ currentUser, onLogout, isSidebarOpen, toggleSidebar }) => {
             Supervisors
           </Link>
           <Link
+            to="/admin/external-list"
+            className={`p-2 text-lg ${
+              pathName.includes("/admin/supervisor-list") && "bg-gray-200"
+            } hover:bg-gray-200`}
+          >
+            Externals
+          </Link>
+          <Link
             to="/admin/group-list"
             className={`p-2 text-lg ${
               pathName.includes("/admin/group-list") && "bg-gray-200"

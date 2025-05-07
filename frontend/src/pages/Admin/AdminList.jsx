@@ -48,7 +48,7 @@ export default function AdminList({ currentUser }) {
     };
     const response = await registerAdmin(newAdminData);
     if (response.success) {
-      setAdmins((prev) => [...prev, response.newAdmin]);
+      setAdmins((prev) => [...prev, newAdminData]);
       toast.success("Admin added successfully");
       closeModal();
     } else {

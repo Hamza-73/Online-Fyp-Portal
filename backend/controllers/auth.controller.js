@@ -1,11 +1,12 @@
 const { body, validationResult } = require("express-validator");
-const Admin = require("../models/admin.model.js"); // Adjust the import based on your project structure
-const Student = require("../models/student.model.js"); // Adjust the import based on your project structure
+const Admin = require("../models/admin.model.js");
+const Student = require("../models/student.model.js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Supervisor = require("../models/supervisor.model.js");
 const Group = require("../models/group.model.js");
 const Announcement = require("../models/announcement.model.js");
+const External = require("../models/external.model.js");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -298,8 +299,8 @@ module.exports.getGroups = async (req, res) => {
         marks: group.marks,
         deadlines: group.deadlines,
         submissions: group.submissions,
-        viva : group.viva,
-        isApproved : group.isApproved,
+        viva: group.viva,
+        isApproved: group.isApproved,
       });
 
       return acc;
@@ -450,5 +451,140 @@ module.exports.getAnnouncement = async (req, res) => {
   } catch (error) {
     console.error("Error getting announcement :", error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+module.exports.registerExternal = async (req, res) => {
+  try {
+    const adminId = req.user.id; // Extract admin ID from the token
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+    const { name, username, email, phone } = req.body;
+    // Check if the email or username already exists
+    const existingUser = await External.findOne({
+      $or: [
+        { email },
+        {
+          username: {
+            $regex: new RegExp("^" + username.toLowerCase(), "i"),
+          },
+        },
+      ],
+    });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ message: "Email or Username already exists" });
+    }
+    // Create the new external user
+    const newExternal = new External({
+      name,
+      username,
+      email,
+      phone,
+    });
+    await newExternal.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "External user registered successfully",
+      external: newExternal,
+    });
+  } catch (error) {
+    console.error("Error in registerExternal:", error);
+    return res.status(500).json({ message: "Server error", success: false });
+  }
+};
+
+module.exports.editExternal = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+    const updates = {};
+    const allowedFields = ["name", "username", "email", "phone"];
+
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined && req.body[field] !== "") {
+        updates[field] = req.body[field];
+      }
+    });
+
+    // Check for unique email or username if they are being updated
+    if (updates.email || updates.username) {
+      const existingUser = await External.findOne({
+        $or: [
+          updates.email ? { email: updates.email } : {},
+          updates.username
+            ? {
+                username: {
+                  $regex: new RegExp("^" + updates.username.toLowerCase(), "i"),
+                },
+              }
+            : {},
+        ],
+        _id: { $ne: id },
+      });
+
+      if (existingUser) {
+        return res
+          .status(400)
+          .json({ message: "Email or Username already exists" });
+      }
+    }
+
+    const updatedExternal = await External.findByIdAndUpdate(id, updates, {
+      new: true,
+    });
+
+    if (!updatedExternal) {
+      return res.status(404).json({ message: "External user not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "External user updated successfully",
+      external: updatedExternal,
+    });
+  } catch (error) {
+    console.error("Error in editExternal:", error);
+    return res.status(500).json({ message: "Server error", success: false });
+  }
+};
+
+module.exports.getExternals = async (req, res) => {
+  try {
+    const externals = await External.find({});
+    return res.status(200).json({ success: true, externals });
+  } catch (error) {
+    console.error("Error in registerExternal:", error);
+    return res.status(500).json({ message: "Server error", success: false });
+  }
+};
+
+module.exports.deleteExternal = async (req, res) => {
+  try {
+    const adminId = req.user.id;
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+    const { id } = req.params;
+    const external = await External.findByIdAndDelete(id);
+    if (!external) {
+      return res.status(404).json({ message: "External user not found" });
+    }
+    return res
+      .status(200)
+      .json({ message: "External user deleted successfully", success: true });
+  } catch (error) {
+    console.error("Error in registerExternal:", error);
+    return res.status(500).json({ message: "Server error", success: false });
   }
 };
