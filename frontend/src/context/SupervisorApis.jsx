@@ -234,7 +234,7 @@ export function SupervisorApis({ children }) {
       const result = response.json();
       return result;
     } catch (error) {
-      console.log("error in setting deadline ", error);
+      console.log("error in scheduling viva ", error);
     }
   };
 
@@ -248,6 +248,39 @@ export function SupervisorApis({ children }) {
       return result;
     } catch (error) {
       console.log("error in setting deadline ", error);
+    }
+  };
+
+  const updateVivaStatus = async (groupId, status) => {
+    try {
+      const response = await fetch(
+        `${server}/supervisor/update-viva-status/${groupId}/${status}`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+      const result = response.json();
+      return result;
+    } catch (error) {
+      console.log("error in setting deadline ", error);
+    }
+  };
+
+  const uploadMarks = async (groupId, marks) => {
+    try {
+      const response = await fetch(`${server}/supervisor/upload-marks`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ groupId, marks }),
+      });
+      const result = response.json();
+      return result;
+    } catch (error) {
+      console.log("error in scheduling viva ", error);
     }
   };
 
@@ -270,6 +303,8 @@ export function SupervisorApis({ children }) {
         setDeadline,
         scheduleViva,
         getScheduledVivas,
+        updateVivaStatus,
+        uploadMarks,
       }}
     >
       {children}

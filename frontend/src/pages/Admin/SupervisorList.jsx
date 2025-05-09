@@ -148,7 +148,7 @@ export default function SupervisorList({ currentUser }) {
   };
 
   const filteredSupervisors = supervisors.filter((supervisor) => {
-    const lowerQuery = searchQuery.toLowerCase();
+    const lowerQuery = searchQuery.toLowerCase().trim();
     return (
       supervisor.name?.toString().toLowerCase().includes(lowerQuery) ||
       supervisor.username?.toString().toLowerCase().includes(lowerQuery) ||

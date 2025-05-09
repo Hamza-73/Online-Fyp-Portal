@@ -3,157 +3,49 @@ import { AuthContext } from "../../context/AuthApis";
 import { SupervisorContext } from "../../context/SupervisorApis";
 import { toast, Toaster } from "react-hot-toast";
 
-export default function ScheduleVivas() {
-  const { getGroups } = useContext(AuthContext);
-  const { scheduleViva } = useContext(SupervisorContext);
-  const [eligibleGroups, setEligibleGroups] = useState([]);
-  const [pendingGroups, setPendingGroups] = useState([]);
-  const [activeTab, setActiveTab] = useState("eligible");
+export default function ScheduledVivas() {
+  const { getScheduledVivas, updateVivaStatus } = useContext(SupervisorContext);
   const [showVivaModal, setShowVivaModal] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState(null);
-  const [groupDetailsModal, setGroupDetailsModal] = useState(false);
-  const [external, setExternal] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  });
-  const [vivaDateTime, setVivaDateTime] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [vivas, setVivas] = useState([]);
+  const [groupDetailsModal, setGroupDetailsModal] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [vivaDetail, setVivaDetail] = useState(null);
 
   useEffect(() => {
-    fetchGroups();
+    fetchScheduledVivas();
   }, []);
 
-  const fetchGroups = async () => {
+  const fetchScheduledVivas = async () => {
     try {
-      const response = await getGroups();
-      const eligible = [];
-      const pending = [];
-
-      response?.data?.forEach((group) => {
-        const groupData = group?.groups?.[0];
-
-        // Skip if group has viva already scheduled
-        if (!groupData || groupData.viva) return;
-
-        const proposalSubmitted = groupData.submissions?.proposal?.submitted;
-        const documentationSubmitted =
-          groupData.submissions?.documentation?.submitted;
-
-        if (proposalSubmitted && documentationSubmitted) {
-          eligible.push(group);
-        } else {
-          pending.push(group);
-        }
-      });
-
-      setEligibleGroups(eligible);
-      setPendingGroups(pending);
-    } catch (error) {
-      toast.error("Error fetching groups");
-      console.error("Error fetching groups:", error);
-    }
-  };
-
-  const handleScheduleClick = (group) => {
-    // Store the whole group object to ensure we have all the needed data
-    setSelectedGroup(group);
-    setShowVivaModal(true);
-  };
-
-  const closeModal = () => {
-    setSelectedGroup(null);
-    setShowVivaModal(false);
-    // Reset form data
-    setExternal({
-      name: "",
-      email: "",
-      phone: "",
-    });
-    setVivaDateTime("");
-  };
-
-  const handleChangeExternal = (e) => {
-    const { name, value } = e.target;
-    setExternal((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const groupsToShow =
-    activeTab === "eligible" ? eligibleGroups : pendingGroups;
-
-  const validateForm = () => {
-    if (!external.name.trim()) {
-      toast.error("External examiner name is required");
-      return false;
-    }
-    if (!external.email.trim()) {
-      toast.error("External examiner email is required");
-      return false;
-    }
-    if (!external.phone.trim()) {
-      toast.error("External examiner phone is required");
-      return false;
-    }
-    if (!vivaDateTime) {
-      toast.error("Viva date and time is required");
-      return false;
-    }
-    return true;
-  };
-
-  const handleScheduleViva = async (e) => {
-    e.preventDefault();
-
-    if (!selectedGroup) {
-      toast.error("No group selected");
-      return;
-    }
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Make sure we're using the correct group ID
-      const groupId = selectedGroup.groupId;
-      console.log("groupId ", groupId);
-
-      if (!groupId) {
-        toast.error("Invalid group ID");
-        setIsSubmitting(false);
-        return;
+      const response = await getScheduledVivas();
+      console.log("response is ", response);
+      if (response.success) {
+        setVivas(response.vivas);
       }
+    } catch (error) {
+      console.error("Error fetching vivas:", error);
+    }
+  };
 
-      const result = await scheduleViva(groupId, external, vivaDateTime);
-
-      console.log("result is ", result);
-
+  const handleUpdateVivaStstus = async (groupId, status) => {
+    const confirmation = window.confirm(
+      `Are you sure you want to mark this viva is completed?`
+    );
+    if (confirmation) {
+      const result = await updateVivaStatus(groupId, status);
+      console.log("result ", result);
       if (result.success) {
-        toast.success(result.message || "Viva scheduled successfully");
-        closeModal();
-        // Refresh the groups list
-        fetchGroups();
+        toast.success("Viva status updated successfully");
+        setVivas((prevVivas) =>
+          prevVivas.map((viva) =>
+            viva.group._id === groupId ? { ...viva, status } : viva
+          )
+        );
       } else {
-        toast.error(result.message || "Failed to schedule viva");
+        toast.error("Failed to update viva status");
       }
-    } catch (error) {
-      toast.error(
-        "Error scheduling viva: " + (error.message || "Unknown error")
-      );
-      console.error("Error scheduling viva:", error);
-    } finally {
-      setIsSubmitting(false);
     }
-  };
-
-  const handleVivaDateTimeChange = (e) => {
-    setVivaDateTime(e.target.value);
   };
 
   // Get the current date and set the min value for the input
@@ -167,57 +59,11 @@ export default function ScheduleVivas() {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  // Filtered groups based on the search query
-  const filteredGroups = (
-    activeTab === "eligible" ? eligibleGroups : pendingGroups
-  ).filter((group) => {
-    const title = group.groups[0]?.title?.toLowerCase() || "";
-    const supervisor = group.supervisorName?.toLowerCase() || "";
-    return (
-      title.includes(searchQuery.toLowerCase()) ||
-      supervisor.includes(searchQuery.toLowerCase())
-    );
-  });
-
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-semibold text-center mb-6 text-gray-800">
-        Schedule Viva
+        Scheduled Viva
       </h1>
-
-      {/* Toggle Buttons */}
-      <div className="flex justify-center mb-6">
-        <button
-          className={`relative px-4 py-2 mr-2 rounded ${
-            activeTab === "eligible"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200 text-gray-800"
-          }`}
-          onClick={() => setActiveTab("eligible")}
-        >
-          Eligible Groups
-          {eligibleGroups.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-              {eligibleGroups.length}
-            </span>
-          )}
-        </button>
-        <button
-          className={`relative px-4 py-2 rounded ${
-            activeTab === "pending"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200 text-gray-800"
-          }`}
-          onClick={() => setActiveTab("pending")}
-        >
-          Non-Eligible Groups
-          {pendingGroups.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-              {pendingGroups.length}
-            </span>
-          )}
-        </button>
-      </div>
 
       {/* Search Bar */}
       <div className="mb-6 relative">
@@ -254,44 +100,74 @@ export default function ScheduleVivas() {
               <th className="py-3 px-6 text-left">Group Title</th>
               <th className="py-3 px-6 text-left">Supervisor</th>
               <th className="py-3 px-6 text-center">Group Details</th>
-              {activeTab === "eligible" && (
-                <th className="py-3 px-6 text-center">Schedule Viva</th>
-              )}
+              <th className="py-3 px-6 text-center">Viva Details</th>
+              <th className="py-3 px-6 text-center">Viva Status</th>
+              <th className="py-3 px-6 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredGroups.length > 0 ? (
-              filteredGroups.map((group, index) => (
+            {vivas.length > 0 ? (
+              vivas.map((viva, index) => (
                 <tr
-                  key={group._id || index}
+                  key={viva._id || index}
                   className={`border-b cursor-pointer hover:bg-slate-100 ${
                     index % 2 === 0 ? "bg-gray-100" : "bg-white"
                   }`}
                 >
                   <td className="py-3 px-6 text-center">{index + 1}</td>
-                  <td className="py-3 px-6">{group.groups[0].title || "-"}</td>
-                  <td className="py-3 px-6">{group.supervisorName || "-"}</td>
+                  <td className="py-3 px-6">{viva.group.title || "-"}</td>
+                  <td className="py-3 px-6">
+                    {viva.group.supervisor.name || "-"}
+                  </td>
                   <td className="py-3 px-6 text-center">
                     <button
                       onClick={() => {
                         setGroupDetailsModal(true);
-                        setSelectedGroup(group.groups[0]);
+                        setSelectedGroup(viva.group);
                       }}
-                      className="bg-yellow-500 text-white p-2 rounded"
+                      className="text-blue-600 underline"
                     >
                       Group Details
                     </button>
                   </td>
-                  {activeTab === "eligible" && (
-                    <td className="py-3 px-6 text-center">
+                  <td className="py-3 px-6 text-center">
+                    <button
+                      onClick={() => {
+                        setShowVivaModal(true);
+                        setVivaDetail(viva);
+                      }}
+                      className="text-blue-600 underline"
+                    >
+                      Viva Details
+                    </button>
+                  </td>
+                  <td className="py-3 px-6 text-center">
+                    {viva.status === "pending" ? (
+                      <span className="text-yellow-500 font-semibold">
+                        Pending
+                      </span>
+                    ) : (
+                      <span className="text-green-500 font-semibold">
+                        Completed
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-3 px-6 text-center">
+                    {viva.status === "pending" ? (
                       <button
-                        onClick={() => handleScheduleClick(group.groups[0])}
-                        className="bg-blue-500 text-white p-2 rounded"
+                        onClick={() =>
+                          handleUpdateVivaStstus(viva.group._id, "completed")
+                        }
+                        className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600"
                       >
-                        Schedule Viva
+                        Mark Viva Completed
                       </button>
-                    </td>
-                  )}
+                    ) : (
+                      <span className="text-green-500 font-semibold">
+                        Completed
+                      </span>
+                    )}
+                  </td>
                 </tr>
               ))
             ) : (
@@ -326,86 +202,73 @@ export default function ScheduleVivas() {
         </div>
       )}
 
-      {/* Viva Modal */}
-      {showVivaModal && selectedGroup && (
+      {/* Viva Detail Modal */}
+      {showVivaModal && vivaDetail && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-lg p-6 relative">
-            <h2 className="text-xl font-semibold mb-4 text-center">
-              Schedule Viva
-            </h2>
-            <p className="mb-4 text-center text-gray-700 font-medium">
-              Group:{" "}
-              <span className="text-blue-600">{selectedGroup.title}</span>
-            </p>
-            <form onSubmit={handleScheduleViva} className="grid gap-4">
-              <input
-                type="text"
-                name="name"
-                value={external.name}
-                placeholder="External Name"
-                className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                onChange={handleChangeExternal}
-                required
-              />
-              <input
-                type="email"
-                name="email"
-                value={external.email}
-                placeholder="External Email"
-                className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                onChange={handleChangeExternal}
-                required
-              />
-              <input
-                type="tel"
-                name="phone"
-                value={external.phone}
-                placeholder="External Phone Number"
-                className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                onChange={handleChangeExternal}
-                required
-              />
+          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="flex flex-col gap-8 px-4 md:px-10">
+              {/* Header */}
+              <h2 className="text-2xl font-semibold text-gray-800 border-b pb-3 text-center">
+                Scheduled Viva Details
+              </h2>
 
-              {/* Date and Time Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date
-                  </label>
-                  <input
-                    type="dateTime-local"
-                    name="vivaDateTime"
-                    value={vivaDateTime}
-                    onChange={handleVivaDateTimeChange}
-                    min={getCurrentDateTime()} // Disable past dates
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              {/* Group Info */}
+              <div className="space-y-2 text-gray-700">
+                <p>
+                  <strong>Group Title:</strong>{" "}
+                  <span className="text-blue-600">
+                    {vivaDetail.group?.title || "N/A"}
+                  </span>
+                </p>
+                <p>
+                  <strong>Supervisor:</strong>{" "}
+                  {vivaDetail.group.supervisor.name || "N/A"}
+                </p>
               </div>
 
-              <div className="flex justify-end gap-4 mt-4">
-                <button
-                  type="button"
-                  className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                  onClick={closeModal}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 ${
-                    isSubmitting ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {isSubmitting ? "Scheduling..." : "Schedule"}
-                </button>
+              {/* External Info */}
+              <div className="space-y-2 text-gray-700">
+                <h3 className="text-xl font-semibold text-gray-800 mb-2 border-b pb-2">
+                  External Examiner
+                </h3>
+                <p>
+                  <strong>Name:</strong>{" "}
+                  <span className="text-blue-600">
+                    {vivaDetail.external?.name || "N/A"}
+                  </span>
+                </p>
+                <p>
+                  <strong>Email:</strong> {vivaDetail.external?.email || "N/A"}
+                </p>
+                <p>
+                  <strong>Phone:</strong> {vivaDetail.external?.phone || "N/A"}
+                </p>
               </div>
-            </form>
+
+              {/* Viva Timing */}
+              <div className="space-y-2 text-gray-700">
+                <h3 className="text-xl font-semibold text-gray-800 mb-2 border-b pb-2">
+                  Viva Schedule
+                </h3>
+                <p>
+                  <strong>Date & Time:</strong>{" "}
+                  {new Date(vivaDetail.dateTime).toLocaleString()}
+                </p>
+              </div>
+
+              {/* Close Button */}
+              <button
+                className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full"
+                onClick={() => setShowVivaModal(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
 
+      {/* Group Detail Modal */}
       {groupDetailsModal && selectedGroup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-y-auto">

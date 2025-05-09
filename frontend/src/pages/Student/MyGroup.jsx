@@ -23,6 +23,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
   const [submissionModal, setSubmissionModal] = useState(false);
   const [viewSubmissionsModal, setViewSubmissionsModal] = useState(false);
   const [showVivaModal, setShowVivaModal] = useState(false);
+  const [marksModal, setMarksModal] = useState(false);
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -55,6 +56,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
     setFile(null);
     setSubmissionModal(false);
     setShowVivaModal(false);
+    setMarksModal(false);
   };
 
   const handleUploadDocument = async (e) => {
@@ -224,10 +226,10 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
     <>
       <Toaster />
       {myGroup ? (
-        <div className="min-h-screen p-6 bg-gray-100">
-          <div className="max-w-9xl mx-auto bg-white p-8 rounded-lg shadow space-y-8 relative">
+        <div className="h-[100%] p-6 ">
+          <div className="lg:min-h-[80vh] max-w-9xl mx-auto bg-white p-8 rounded-lg shadow space-y-8 relative">
             {/* Deadline Badge */}
-            {activeTask && (
+            {activeTask && !myGroup.viva && (
               <div className="absolute top-4 right-4 flex flex-col items-end space-y-2">
                 <span className="bg-red-500 text-white text-md font-semibold px-4 py-2 rounded-full">
                   {activeTask.type} Deadline:{" "}
@@ -251,7 +253,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
               </div>
             )}
             {/* Viva Badge */}
-            {myGroup && myGroup.viva && (
+            {myGroup && myGroup.viva && myGroup.viva.status === "pending" && (
               <div className="absolute top-4 right-4 flex flex-col items-end space-y-2">
                 <span className="bg-red-500 text-white text-md font-semibold px-4 py-2 rounded-full">
                   You're Viva has been Scheduled!
@@ -316,45 +318,55 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
               </div>
 
               {/* Actions */}
-              <div className="border border-gray-300 p-6 rounded-lg shadow-sm h-full flex flex-col justify-center space-y-4">
-                {myGroup && myGroup.isApproved ? (
-                  <>
+              <div className="border border-gray-300 p-6 rounded-lg shadow-sm h-full flex flex-col items-center space-y-4">
+                <div className="w-full md:w-2/3 flex flex-col items-center space-y-4">
+                  {myGroup && myGroup.isApproved ? (
+                    <>
+                      <button
+                        className="w-full bg-gray-700 text-white px-6 py-3 rounded-md hover:bg-gray-800 transition duration-200"
+                        onClick={handleRequestMeeting}
+                      >
+                        Request Meeting
+                      </button>
+                      <button className="w-full bg-gray-700 text-white px-6 py-3 rounded-md hover:bg-gray-800 transition duration-200">
+                        Extension Request
+                      </button>
+                      <button
+                        className="w-full bg-gray-700 text-white px-6 py-3 rounded-md hover:bg-gray-800 transition duration-200"
+                        onClick={() => setUploadModal(true)}
+                      >
+                        Upload Document
+                      </button>
+                      <button
+                        className="w-full bg-gray-700 text-white px-6 py-3 rounded-md hover:bg-gray-800 transition duration-200"
+                        onClick={openProjectModal}
+                      >
+                        View Project Details
+                      </button>
+                      <button
+                        className="w-full bg-gray-700 text-white px-6 py-3 rounded-md hover:bg-gray-800 transition duration-200"
+                        onClick={() => setViewSubmissionsModal(true)}
+                      >
+                        View Submissions
+                      </button>
+                      {myGroup.viva && (
+                        <button
+                          className="w-full bg-gray-700 text-white px-6 py-3 rounded-md hover:bg-gray-800 transition duration-200"
+                          onClick={() => setMarksModal(true)}
+                        >
+                          See Marks
+                        </button>
+                      )}
+                    </>
+                  ) : (
                     <button
-                      className="bg-green-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-green-700"
-                      onClick={handleRequestMeeting}
-                    >
-                      Request Meeting
-                    </button>
-                    <button className="bg-orange-500 text-white px-6 py-3 rounded-md shadow-md hover:bg-orange-600">
-                      Extension Request
-                    </button>
-                    <button
-                      className="bg-blue-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-blue-700"
-                      onClick={() => setUploadModal(true)}
-                    >
-                      Upload Document
-                    </button>
-                    <button
-                      className="bg-gray-700 text-white px-6 py-3 rounded-md shadow-md hover:bg-gray-800"
+                      className="w-full bg-gray-700 text-white px-6 py-3 rounded-md hover:bg-gray-800 transition duration-200"
                       onClick={openProjectModal}
                     >
                       View Project Details
                     </button>
-                    <button
-                      className="bg-purple-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-purple-700"
-                      onClick={() => setViewSubmissionsModal(true)}
-                    >
-                      View Submissions
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    className="bg-gray-700 text-white px-6 py-3 rounded-md shadow-md hover:bg-gray-800"
-                    onClick={openProjectModal}
-                  >
-                    View Project Details
-                  </button>
-                )}
+                  )}
+                </div>
               </div>
             </div>
 
@@ -582,38 +594,48 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
             </div>
           )}
 
-          {/* View Viva Detail Modal */}
+          {/* Viva Detail Modal */}
           {myGroup && myGroup.viva && showVivaModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4">
-              <div className="bg-white p-6 rounded-lg shadow-xl w-[90%] md:w-[50%] lg:w-[40%] max-h-[80vh] overflow-y-auto relative">
-                <h2 className="text-2xl font-semibold text-gray-800 text-center border-b pb-4 mb-5">
-                  Your Viva is Scheduled — Best of Luck!
-                </h2>
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+                <div className="flex flex-col gap-8 px-4 md:px-10">
+                  {/* Header */}
+                  <h2 className="text-2xl font-semibold text-gray-800 border-b pb-3 text-center">
+                    Your Viva is Scheduled — Best of Luck!
+                  </h2>
 
-                <div className="space-y-4 px-2 text-gray-700">
-                  <div className="flex justify-between items-center border-b pb-2">
-                    <span className="font-medium flex items-center gap-2">
-                      Date and Time:
-                    </span>
-                    <span>
+                  {/* External Info */}
+                  <div className="space-y-2 text-gray-700">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2 border-b pb-2">
+                      External Examiner
+                    </h3>
+                    <p>
+                      <strong>Name:</strong>{" "}
+                      <span className="text-blue-600">
+                        {myGroup.viva.external.name}
+                      </span>
+                    </p>
+                  </div>
+
+                  {/* Viva Timing */}
+                  <div className="space-y-2 text-gray-700">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2 border-b pb-2">
+                      Viva Data & Time
+                    </h3>
+                    <p>
+                      <strong>Date & Time:</strong>{" "}
                       {new Date(myGroup.viva.dateTime).toLocaleString()}
-                    </span>
+                    </p>
                   </div>
 
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium flex items-center gap-2">
-                      External:
-                    </span>
-                    <span>{myGroup.viva.external.name}</span>
-                  </div>
+                  {/* Close Button */}
+                  <button
+                    className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full"
+                    onClick={() => setShowVivaModal(false)}
+                  >
+                    Close
+                  </button>
                 </div>
-
-                <button
-                  className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full transition duration-200"
-                  onClick={closeModal}
-                >
-                  Close
-                </button>
               </div>
             </div>
           )}
@@ -714,7 +736,11 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
                   </label>
                   <input
                     type="file"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+                    accept={
+                      submissionModal
+                        ? ".pdf"
+                        : ".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    }
                     onChange={(e) => {
                       console.log("file is ", e.target.files[0]);
                       setFile(e.target.files[0]);
@@ -776,6 +802,50 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
                 <button
                   className="w-full bg-gray-600 text-white py-3 rounded-md font-medium hover:bg-gray-700 transition mt-2"
                   onClick={closeModal}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Marks Modal */}
+          {marksModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4">
+              <div className="bg-white p-6 rounded-2xl shadow-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] max-h-[80vh] overflow-y-auto relative">
+                <h2 className="text-2xl font-bold text-center text-gray-800 border-b pb-4 mb-6">
+                  Viva Marks
+                </h2>
+
+                <div className="space-y-4 text-gray-700 text-base">
+                  <div className="flex justify-between">
+                    <span className="font-medium">External Marks:</span>
+                    <span>{myGroup.marks.externalMarks}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Internal Marks:</span>
+                    <span>{myGroup.marks.internalMarks}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">HOD Marks:</span>
+                    <span>{myGroup.marks.hodMarks}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-3 mt-4 font-semibold text-gray-900">
+                    <span>Average Marks:</span>
+                    <span>
+                      {(
+                        (myGroup.marks.externalMarks +
+                          myGroup.marks.internalMarks +
+                          myGroup.marks.hodMarks) /
+                        3
+                      ).toFixed(0)}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={closeModal}
+                  className="mt-8 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full transition"
                 >
                   Close
                 </button>

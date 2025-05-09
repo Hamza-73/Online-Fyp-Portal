@@ -92,7 +92,7 @@ const AdminNav = ({ currentUser, onLogout, isSidebarOpen, toggleSidebar }) => {
           <Link
             to="/admin/external-list"
             className={`p-2 text-lg ${
-              pathName.includes("/admin/supervisor-list") && "bg-gray-200"
+              pathName.includes("/admin/external-list") && "bg-gray-200"
             } hover:bg-gray-200`}
           >
             Externals

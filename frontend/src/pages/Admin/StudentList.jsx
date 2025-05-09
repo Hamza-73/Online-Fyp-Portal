@@ -147,7 +147,7 @@ export default function StudentList({ currentUser }) {
   };
 
   const filteredStudents = students.filter((student) => {
-    const lowerQuery = searchQuery.toLowerCase();
+    const lowerQuery = searchQuery.toLowerCase().trim();
     return (
       student.name?.toString().toLowerCase().includes(lowerQuery) ||
       student.fatherName?.toString().toLowerCase().includes(lowerQuery) ||

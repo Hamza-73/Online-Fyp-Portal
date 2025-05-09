@@ -16,6 +16,8 @@ const {
   setDeadline,
   scheduleViva,
   getVivas,
+  updateVivaStatus,
+  uploadMarks,
 } = require("../controllers/supervisor.controller");
 const router = express.Router();
 
@@ -38,5 +40,12 @@ router.post(
 router.post("/set-deadline", authenticateToken, setDeadline);
 router.post("/schedule-viva", authenticateToken, scheduleViva);
 router.get("/get-scheduled-viva", authenticateToken, getVivas);
+router.post(
+  "/update-viva-status/:groupId/:status",
+  authenticateToken,
+  updateVivaStatus
+);
+
+router.post("/upload-marks", authenticateToken, uploadMarks);
 
 module.exports = router;

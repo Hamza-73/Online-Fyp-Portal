@@ -709,13 +709,17 @@ module.exports.myGroup = async (req, res) => {
         },
         {
           path: "viva",
+          populate: {
+            path: "external",
+            select: "name",
+          },
         },
       ],
     });
 
     // console.log("group is ", student.group);
 
-    // Return the group data if found
+    // Return error if group not found
     if (!student || !student.group) {
       return res
         .status(404)

@@ -13,7 +13,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-gray-50 to-gray-100 p-6">
+    <div className="h-[100%] p-6">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-4xl font-extrabold text-center text-gray-700 mb-8">📢 Announcements</h1>
 

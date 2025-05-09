@@ -103,17 +103,18 @@ export default function AdminList({ currentUser }) {
   };
 
   const filteredAdmins = admins.filter((admin) => {
+    const lowerQuery = searchQuery.toLowerCase().trim();
     const fullName = `${admin.fname} ${admin.lname}`.toLowerCase();
     return (
       fullName?.toString().includes(searchQuery.toLowerCase()) ||
       admin.email
         ?.toString()
         .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
+        .includes(lowerQuery) ||
       admin.username
         ?.toString()
         .toLowerCase()
-        .includes(searchQuery.toLowerCase())
+        .includes(lowerQuery)
     );
   });
 

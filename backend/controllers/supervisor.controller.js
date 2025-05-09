@@ -700,6 +700,9 @@ module.exports.getMyGroups = async (req, res) => {
         },
         {
           path: "viva",
+          populate: {
+            path: "external",
+          },
         },
       ],
     });
@@ -1048,13 +1051,19 @@ module.exports.getVivas = async (req, res) => {
     }
 
     // Fetch all vivas and deeply populate group and students
-    const vivas = await Viva.find({}).populate({
-      path: "group",
-      populate: {
-        path: "students",
-        model: "Student",
-      },
-    });
+    const vivas = await Viva.find({})
+      .populate("external")
+      .populate({
+        path: "group",
+        populate: [
+          {
+            path: "students",
+          },
+          {
+            path: "supervisor",
+          },
+        ],
+      });
 
     if (!vivas || vivas.length === 0) {
       return res.status(404).json({
@@ -1066,6 +1075,144 @@ module.exports.getVivas = async (req, res) => {
     return res.status(200).json({ success: true, vivas });
   } catch (error) {
     console.error("Error fetching vivas:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+module.exports.updateVivaStatus = async (req, res) => {
+  try {
+    const { groupId, status } = req.params;
+    const supervisorId = req.user.id;
+
+    // Validate supervisor
+    const supervisor = await Supervisor.findById(supervisorId);
+    if (!supervisor || !supervisor.isCommittee) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Fetch the group and validate
+    const group = await Group.findById(groupId).populate("viva");
+    if (!group) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Group not found" });
+    }
+
+    // Update the viva status
+    if (group.viva) {
+      if (group.viva.dateTime < new Date()) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot update viva status after the scheduled date",
+        });
+      }
+      group.viva.status = status;
+
+      //notify students of the group
+      const students = await Student.find({ group: groupId });
+      const studentNotification = {
+        message: `You viva has been taken`,
+        type: "Important",
+      };
+      await Promise.all(
+        students.map((student) => {
+          student.notifications.unseen.push(studentNotification);
+          return student.save();
+        })
+      );
+      //notify supervisor
+      const supervisorNotification = {
+        message: `Viva for your "${group.title}" has been taken update students marks on Portal.`,
+        type: "Important",
+      };
+      supervisor.notifications.unseen.push(supervisorNotification);
+      await Promise.all([supervisor.save(), group.viva.save()]);
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: "Viva not found for this group",
+      });
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Viva status updated successfully" });
+  } catch (error) {
+    console.error("Error in updating viva status:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+module.exports.uploadMarks = async (req, res) => {
+  try {
+    const { groupId, marks } = req.body;
+    const supervisorId = req.user.id;
+
+    //marks should be an object from frontend
+    // marks: {
+    //   externalMarks: 0,
+    //   internalMarks: 0,
+    //   hodMarks: 0,
+    // },
+
+    // Validate supervisor
+    const supervisor = await Supervisor.findById(supervisorId);
+    if (!supervisor) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Fetch the group and validate
+    const group = await Group.findById(groupId).populate("viva");
+    if (!group) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Group not found" });
+    }
+    if (group.supervisor.toString() !== supervisorId) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    if (group.viva.status === "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "You can only upload marks when viva is completed",
+      });
+    }
+
+    // Update the marks for the group
+    group.marks = marks;
+
+    // Notify students of the group
+    const students = await Student.find({ group: groupId });
+    const studentNotification = {
+      message: `Marks have been uploaded for your project`,
+      type: "Important",
+    };
+
+    await Promise.all(
+      students.map((student) => {
+        student.notifications.unseen.push(studentNotification);
+        return student.save();
+      })
+    );
+
+    //notify supervisor
+    const supervisorNotification = {
+      message: `Marks have been uploaded for group "${group.title}"`,
+      type: "Important",
+    };
+    supervisor.notifications.unseen.push(supervisorNotification);
+    await Promise.all([supervisor.save(), group.save()]);
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Marks uploaded successfully" });
+  } catch (error) {
+    console.error("Error uploading marks:", error);
     return res
       .status(500)
       .json({ success: false, message: "Internal Server Error" });

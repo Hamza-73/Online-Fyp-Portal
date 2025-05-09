@@ -40,14 +40,15 @@ export default function GroupList({ currentUser }) {
 
   // Filtered groups based on search and approval
   const filteredGroups = groups.map((supervisor) => {
+    const lowerQuery = searchQuery.toLowerCase().trim();
     const filtered = supervisor.groups.filter((group) => {
       const searchMatch =
-        group.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        group.title.toLowerCase().includes(lowerQuery) ||
         supervisor.supervisorName
           .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
+          .includes(lowerQuery) ||
         group.members?.some((member) =>
-          member.name?.toLowerCase().includes(searchQuery.toLowerCase())
+          member.name?.toLowerCase().includes(lowerQuery)
         );
 
       const approvalMatch =

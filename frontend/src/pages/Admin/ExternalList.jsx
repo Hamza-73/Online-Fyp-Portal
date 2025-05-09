@@ -5,7 +5,6 @@ import { AuthContext } from "../../context/AuthApis.jsx";
 import { FaUser, FaEnvelope, FaIdCard, FaUserTie } from "react-icons/fa";
 
 export default function ExternalList({ currentUser }) {
-  const navigate = useNavigate();
   const { registerExternal, deleteExternal, editExternal, getExternals } =
     useContext(AuthContext);
   const [externals, setExternals] = useState([]);
@@ -41,6 +40,7 @@ export default function ExternalList({ currentUser }) {
 
   const handleAddClick = () => {
     setSelectedExternal({});
+    setIsEditing(false);
     setShowModal(true);
     setErrors({}); // Reset errors when opening modal
   };
@@ -50,6 +50,13 @@ export default function ExternalList({ currentUser }) {
     setIsEditing(true);
     setShowModal(true);
     setErrors({}); // Reset errors when opening modal
+  };
+
+  const handleClose = () => {
+    setShowModal(false);
+    setSelectedExternal({});
+    setErrors({});
+    setIsEditing(false);
   };
 
   const validateForm = () => {
@@ -86,8 +93,7 @@ export default function ExternalList({ currentUser }) {
       if (response.success) {
         toast.success("external registered successfully!");
         setExternals((prev) => [...prev, externalData]);
-        setShowModal(false);
-        setSelectedExternal({}); // Reset selected external
+        handleClose();
       } else {
         toast.error(response.message || "Failed to register external.");
       }
@@ -115,8 +121,7 @@ export default function ExternalList({ currentUser }) {
             external._id === selectedExternal._id ? externalData : external
           )
         );
-        setShowModal(false);
-        setSelectedExternal({}); // Reset selected external
+        handleClose();
       } else {
         toast.error(response.message || "Failed to edit external.");
       }
@@ -162,7 +167,7 @@ export default function ExternalList({ currentUser }) {
   };
 
   const filteredExternals = externals.filter((external) => {
-    const lowerQuery = searchQuery.toLowerCase();
+    const lowerQuery = searchQuery.toLowerCase().trim();
     return (
       external.name?.toString().toLowerCase().includes(lowerQuery) ||
       external.username?.toString().toLowerCase().includes(lowerQuery) ||
@@ -365,7 +370,7 @@ export default function ExternalList({ currentUser }) {
                 <button
                   type="button"
                   className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mr-2"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => handleClose()}
                 >
                   Cancel
                 </button>
@@ -373,7 +378,7 @@ export default function ExternalList({ currentUser }) {
                   type="submit"
                   className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                 >
-                  {isEditing ? "Edit" : "register"}
+                  {isEditing ? "Edit" : "Register"}
                 </button>
               </div>
             </form>

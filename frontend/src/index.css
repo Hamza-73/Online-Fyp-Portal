@@ -10,6 +10,7 @@
 
 body{
     overflow-x: hidden;
+    background-color: rgba(243, 244, 246, 1);
 }
 input[type="password"]::-webkit-outer-spin-button,
 input[type="password"]::-webkit-inner-spin-button {

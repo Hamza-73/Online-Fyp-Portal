@@ -12,9 +12,11 @@ import GroupDetail from "./GroupDetail";
 import Loading from "../Loading";
 import Dashboard from "../Dashboard";
 import ScheduleViva from "./ScheduleViva";
+import ScheduledVivas from "./ScheduledVivas";
 
 export default function Supervisor() {
-  const { getProfile, currentUser, setCurrentUser } = useContext(SupervisorContext);
+  const { getProfile, currentUser, setCurrentUser } =
+    useContext(SupervisorContext);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -73,55 +75,131 @@ export default function Supervisor() {
           <Route
             path="/dashboard"
             element={
-              currentUser ? <Dashboard currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <Navigate to="/" replace />
+              currentUser ? (
+                <Dashboard
+                  currentUser={currentUser}
+                  setCurrentUser={setCurrentUser}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
             }
           />
           <Route
             path="/announcements"
             element={
-              currentUser ? <Announcements currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <Navigate to="/" replace />
+              currentUser ? (
+                <Announcements
+                  currentUser={currentUser}
+                  setCurrentUser={setCurrentUser}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
             }
           />
           <Route
             path="/profile"
             element={
-              currentUser ? <SupervisorProfile currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <Navigate to="/" replace />
+              currentUser ? (
+                <SupervisorProfile
+                  currentUser={currentUser}
+                  setCurrentUser={setCurrentUser}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
             }
           />
           <Route
             path="/requests"
             element={
-              currentUser ? <ProposalRequests currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <Navigate to="/" replace />
+              currentUser ? (
+                <ProposalRequests
+                  currentUser={currentUser}
+                  setCurrentUser={setCurrentUser}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
             }
           />
           <Route
             path="/groups"
             element={
-              currentUser ? <Groups currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <Navigate to="/" replace />
+              currentUser ? (
+                <Groups
+                  currentUser={currentUser}
+                  setCurrentUser={setCurrentUser}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
             }
           />
           <Route
             path="/notifications"
             element={
-              currentUser ? <Notifications currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <Navigate to="/" replace />
+              currentUser ? (
+                <Notifications
+                  currentUser={currentUser}
+                  setCurrentUser={setCurrentUser}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
             }
           />
           <Route
             path="/my-groups"
             element={
-              currentUser ? <MyGroups currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <Navigate to="/" replace />
+              currentUser ? (
+                <MyGroups
+                  currentUser={currentUser}
+                  setCurrentUser={setCurrentUser}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
             }
           />
           <Route
             path="/my-groups/:index"
             element={
-              currentUser ? <GroupDetail currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <Navigate to="/" replace />
+              currentUser ? (
+                <GroupDetail
+                  currentUser={currentUser}
+                  setCurrentUser={setCurrentUser}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
             }
           />
           <Route
             path="/schedule-viva"
             element={
-              currentUser ? <ScheduleViva currentUser={currentUser} setCurrentUser={setCurrentUser} /> : <Navigate to="/" replace />
+              currentUser ? (
+                <ScheduleViva
+                  currentUser={currentUser}
+                  setCurrentUser={setCurrentUser}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/scheduled-vivas"
+            element={
+              currentUser ? (
+                <ScheduledVivas
+                  currentUser={currentUser}
+                  setCurrentUser={setCurrentUser}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
             }
           />
         </Routes>

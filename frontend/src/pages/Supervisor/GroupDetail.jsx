@@ -16,6 +16,12 @@ export default function GroupDetail() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reviewText, setReviewText] = useState("");
   const [showVivaModal, setShowVivaModal] = useState(false);
+  const [marks, setMarks] = useState({
+    externalMarks: 0,
+    internalMarks: 0,
+    hodMarks: 0,
+  });
+  const [marksModal, setMarksModal] = useState(false);
 
   const [activeTask, setActiveTask] = useState(null);
 
@@ -25,12 +31,8 @@ export default function GroupDetail() {
     setIsModalOpen(true);
   };
 
-  const closeReviewModal = () => {
-    setIsModalOpen(false);
-    setReviewText("");
-  };
-
-  const { getMyGroups, reviewDocument } = useContext(SupervisorContext);
+  const { getMyGroups, reviewDocument, uploadMarks } =
+    useContext(SupervisorContext);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -76,18 +78,29 @@ export default function GroupDetail() {
     setStudentModal(data);
   };
 
+  const handleClose = () => {
+    setViewSubmissionsModal(false);
+    setMarksModal(false);
+    setProjectModalData(null);
+    setStudentModal(null);
+    setShowVivaModal(false);
+    setExpandedComment(null);
+    setSelectedDoc(null);
+    setReviewText("");
+    setIsModalOpen(false);
+    setMarks({
+      externalMarks: 0,
+      internalMarks: 0,
+      hodMarks: 0,
+    });
+  };
+
   const openProjectModal = () => {
     setProjectModalData({
       title: group[index].title,
       scope: group[index].scope,
       description: group[index].description,
     });
-  };
-
-  const closeModal = () => {
-    setStudentModal(null);
-    setProjectModalData(null);
-    setShowVivaModal(false);
   };
 
   const toggleComment = (index) => {
@@ -105,14 +118,32 @@ export default function GroupDetail() {
     }
   };
 
+  const handleMarksChange = (e) => {
+    const { name, value } = e.target;
+    setMarks((prevMarks) => ({
+      ...prevMarks,
+      [name]: value,
+    }));
+  };
+
+  const handleUploadMarks = async (groupId, marks) => {
+    const result = await uploadMarks(groupId, marks);
+    if (result.success) {
+      toast.success("Marks Uploaded Successfully");
+      handleClose();
+    } else {
+      toast.error(result.message);
+    }
+  };
+
   return (
     <>
       <Toaster />
       {group && group[index] ? (
-        <div className="min-h-screen p-8 bg-gray-100">
-          <div className="max-w-9xl mx-auto bg-white p-8 rounded-lg shadow-xl space-y-8">
+        <div className="h-[100%] p-8">
+          <div className="lg:min-h-[80vh] max-w-9xl mx-auto bg-white p-8 rounded-lg shadow-xl space-y-8">
             {/* Deadline Badge */}
-            {activeTask && (
+            {activeTask && !group[index].viva && (
               <div className="absolute top-12 right-12 flex flex-col items-end space-y-2">
                 <span className="bg-red-500 text-white text-md font-semibold px-4 py-2 rounded-full">
                   {activeTask.type} Deadline:{" "}
@@ -121,20 +152,22 @@ export default function GroupDetail() {
               </div>
             )}
 
-            {group[index] && group[index].viva && (
-              <div className="absolute top-10 right-10 flex flex-col items-end space-y-2">
-                <span className="bg-red-500 text-white text-md font-semibold px-4 py-2 rounded-full">
-                  Viva for this group has been Scheduled!
-                </span>
-                <button
-                  button
-                  className="bg-blue-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-600"
-                  onClick={() => setShowVivaModal(true)}
-                >
-                  See Viva Details
-                </button>
-              </div>
-            )}
+            {group[index] &&
+              group[index].viva &&
+              group[index].viva.status === "pending" && (
+                <div className="absolute top-10 right-10 flex flex-col items-end space-y-2">
+                  <span className="bg-red-500 text-white text-md font-semibold px-4 py-2 rounded-full">
+                    Viva for this group has been Scheduled!
+                  </span>
+                  <button
+                    button
+                    className="bg-blue-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-600"
+                    onClick={() => setShowVivaModal(true)}
+                  >
+                    See Viva Details
+                  </button>
+                </div>
+              )}
 
             <header className="text-center space-y-2">
               <h1 className="text-4xl font-semibold text-gray-800">
@@ -143,6 +176,7 @@ export default function GroupDetail() {
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:px-[10rem]">
+              {/* Group Members */}
               <div className="border border-gray-300 p-6 rounded-lg shadow-sm">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
                   Group Members
@@ -160,21 +194,34 @@ export default function GroupDetail() {
               </div>
 
               {/* Actions */}
-              <div className="border border-gray-300 p-6 rounded-lg shadow-sm h-full flex flex-col justify-center space-y-4">
-                <button
-                  className="bg-green-600 text-white px-6 py-3 rounded-md shadow-md hover:bg-green-700"
-                  onClick={() => openProjectModal(true)}
-                >
-                  View Project Details
-                </button>
-                {group[index] && group[index].isApproved && (
+              <div className="border border-gray-300 p-6 rounded-lg shadow-sm h-full flex flex-col items-center">
+                <div className="w-full md:w-2/3 flex flex-col items-center space-y-4">
                   <button
-                    className="bg-orange-500 text-white px-6 py-3 rounded-md shadow-md hover:bg-orange-600"
-                    onClick={() => setViewSubmissionsModal(true)}
+                    className="w-full bg-gray-700 text-white px-6 py-3 rounded-md hover:bg-gray-800 transition duration-200"
+                    onClick={() => openProjectModal(true)}
                   >
-                    View Submissions
+                    View Project Details
                   </button>
-                )}
+
+                  {group[index] && group[index].isApproved && (
+                    <>
+                      <button
+                        className="w-full bg-gray-700 text-white px-6 py-3 rounded-md hover:bg-gray-800 transition duration-200"
+                        onClick={() => setViewSubmissionsModal(true)}
+                      >
+                        View Submissions
+                      </button>
+                      {group[index].viva && (
+                        <button
+                          onClick={() => setMarksModal(true)}
+                          className="w-full bg-gray-700 text-white px-6 py-3 rounded-md hover:bg-gray-800 transition duration-200"
+                        >
+                          Upload Marks
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -397,7 +444,7 @@ export default function GroupDetail() {
                 </div>
                 <button
                   className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full"
-                  onClick={() => setViewSubmissionsModal(false)}
+                  onClick={handleClose}
                 >
                   Close
                 </button>
@@ -405,52 +452,54 @@ export default function GroupDetail() {
             </div>
           )}
 
-          {/* View Viva Detail Modal */}
-          {group[index] && group[index].viva && showVivaModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4">
-              <div className="bg-white p-6 rounded-lg shadow-xl w-[90%] md:w-[50%] lg:w-[40%] max-h-[80vh] overflow-y-auto relative">
-                <h2 className="text-2xl font-semibold text-gray-800 text-center border-b pb-4 mb-5">
-                  Viva for Group ({group[index]?.title}) has been Scheduled
-                </h2>
+          {/* Viva Detail Modal */}
+          {showVivaModal && group[index] && group[index].viva && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+                <div className="flex flex-col gap-8 px-4 md:px-10">
+                  {/* Header */}
+                  <h2 className="text-2xl font-semibold text-gray-800 border-b pb-3 text-center">
+                    Viva for Group ({group[index]?.title}) has been Scheduled
+                  </h2>
 
-                <div className="space-y-4 px-2 text-gray-700">
-                  <div className="flex justify-between items-center border-b pb-2">
-                    <span className="font-medium flex items-center gap-2">
-                      Date and Time:
-                    </span>
-                    <span>
+                  {/* External Info */}
+                  <div className="space-y-2 text-gray-700">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2 border-b pb-2">
+                      External Examiner
+                    </h3>
+                    <p>
+                      <strong>Name:</strong>{" "}
+                      <span className="text-blue-600">
+                        {group[index].viva.external.name}
+                      </span>
+                    </p>
+                    <p>
+                      <strong>Email:</strong> {group[index].viva.external.email}
+                    </p>
+                    <p>
+                      <strong>Phone:</strong> {group[index].viva.external.phone}
+                    </p>
+                  </div>
+
+                  {/* Viva Timing */}
+                  <div className="space-y-2 text-gray-700">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2 border-b pb-2">
+                      Viva Schedule
+                    </h3>
+                    <p>
+                      <strong>Date & Time:</strong>{" "}
                       {new Date(group[index].viva.dateTime).toLocaleString()}
-                    </span>
+                    </p>
                   </div>
 
-                  <div className="flex justify-between items-center border-b pb-2">
-                    <span className="font-medium flex items-center gap-2">
-                      External:
-                    </span>
-                    <span>{group[index].viva.external.name}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center border-b pb-2">
-                    <span className="font-medium flex items-center gap-2">
-                      External's Email:
-                    </span>
-                    <span>{group[index].viva.external.email}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium flex items-center gap-2">
-                      External's Phone:
-                    </span>
-                    <span>{group[index].viva.external.phone}</span>
-                  </div>
+                  {/* Close Button */}
+                  <button
+                    className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full"
+                    onClick={handleClose}
+                  >
+                    Close
+                  </button>
                 </div>
-
-                <button
-                  className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full transition duration-200"
-                  onClick={closeModal}
-                >
-                  Close
-                </button>
               </div>
             </div>
           )}
@@ -475,7 +524,7 @@ export default function GroupDetail() {
                 </div>
                 <button
                   className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full"
-                  onClick={closeModal}
+                  onClick={handleClose}
                 >
                   Close
                 </button>
@@ -512,7 +561,7 @@ export default function GroupDetail() {
                   </p>
                 </div>
                 <button
-                  onClick={closeModal}
+                  onClick={handleClose}
                   className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full"
                 >
                   Close
@@ -540,7 +589,7 @@ export default function GroupDetail() {
                 <div className="mt-6 flex justify-between">
                   <button
                     className="px-6 py-3 bg-gray-400 text-white font-semibold rounded-lg hover:bg-gray-500 transition-all w-[48%]"
-                    onClick={closeReviewModal}
+                    onClick={handleClose}
                   >
                     Cancel
                   </button>
@@ -551,6 +600,63 @@ export default function GroupDetail() {
                     Submit Review
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Upload Marks Modal */}
+          {marksModal && group[index] && group[index].viva && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white p-8 rounded-lg shadow-xl w-[70%] sm:w-[40%] max-h-[80vh] overflow-y-auto">
+                <h2 className="text-2xl font-semibold text-gray-800 text-center border-b pb-3 mb-4">
+                  Upload Marks
+                </h2>
+
+                {/* Marks Input Section */}
+                <div className="space-y-6">
+                  {[
+                    { label: "External Marks", name: "externalMarks" },
+                    { label: "Internal Marks", name: "internalMarks" },
+                    { label: "HOD Marks", name: "hodMarks" },
+                  ].map(({ label, name }) => (
+                    <div key={name} className="flex flex-col">
+                      <label className="text-gray-700 font-medium mb-1">
+                        {label}
+                      </label>
+                      <input
+                        type="number"
+                        name={name}
+                        value={marks[name]}
+                        onChange={handleMarksChange}
+                        min="0"
+                        max="100"
+                        className={`border ${
+                          marks[name] < 0 || marks[name] > 100
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        } rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                      />
+                      {marks[name] < 0 || marks[name] > 100 ? (
+                        <span className="text-red-500 text-sm mt-1">
+                          Marks must be between 0 and 100.
+                        </span>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  className="mt-6 px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 w-full"
+                  onClick={() => handleUploadMarks(group[index]._id, marks)}
+                >
+                  Submit
+                </button>
+                <button
+                  className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full"
+                  onClick={handleClose}
+                >
+                  Close
+                </button>
               </div>
             </div>
           )}

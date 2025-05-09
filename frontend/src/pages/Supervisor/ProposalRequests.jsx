@@ -216,9 +216,7 @@ export default function ProposalRequests({ currentUser, setCurrentUser }) {
                     {activeTab === "proposal" ? "Project Name" : "Group Name"}
                   </td>
                   <td className="py-3 px-6">
-                    {activeTab === "proposal"
-                      ? selectedRequest.project?.title || "-"
-                      : selectedRequest.group?.name || "-"}
+                    {selectedRequest.project?.title || "-"}
                   </td>
                 </tr>
                 <tr className="border-b">
@@ -257,16 +255,16 @@ export default function ProposalRequests({ currentUser, setCurrentUser }) {
                     {selectedRequest.student?.department || "-"}
                   </td>
                 </tr>
-                {activeTab === "group" && (
+                {/* {activeTab === "group" && (
                   <tr className="border-b">
                     <td className="py-3 px-6 font-bold">Members</td>
                     <td className="py-3 px-6">
-                      {selectedRequest.group?.members
+                      {selectedRequest.group?.students
                         ?.map((member) => member.name)
                         .join(", ") || "-"}
                     </td>
                   </tr>
-                )}
+                )} */}
               </tbody>
             </table>
             <div className="flex justify-center my-4">

@@ -129,6 +129,15 @@ const SuperviorNav = ({
               <FaClock className="text-red-600" /> Schedule Viva
             </Link>
           )}
+
+          <Link
+            to="/supervisor/scheduled-vivas"
+            className={`p-2 text-lg flex items-center gap-2 ${
+              pathName.includes("/supervisor/scheduled-vivas") && "bg-gray-200"
+            } hover:bg-gray-200`}
+          >
+            <FaClock className="text-red-600" /> Scheduled Vivas
+          </Link>
           <button
             onClick={handleLogout}
             className="p-2 text-lg text-red-500 hover:bg-gray-200 flex items-center gap-2"
