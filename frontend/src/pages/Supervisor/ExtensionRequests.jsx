@@ -3,66 +3,57 @@ import { AuthContext } from "../../context/AuthApis";
 import { SupervisorContext } from "../../context/SupervisorApis";
 import { toast, Toaster } from "react-hot-toast";
 
-export default function ScheduledVivas() {
-  const { getScheduledVivas, updateVivaStatus } = useContext(SupervisorContext);
-  const [showVivaModal, setShowVivaModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [vivas, setVivas] = useState([]);
+export default function ExtensionRequests() {
+  const { getExtensionRequests, handleExtensionRequest } =
+    useContext(SupervisorContext);
+
+  const [extensionRequests, setExtensionRequests] = useState([]);
   const [groupDetailsModal, setGroupDetailsModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [vivaDetail, setVivaDetail] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetchScheduledVivas();
+    const fetchExtensionRequests = async () => {
+      const result = await getExtensionRequests();
+      if (result.success) {
+        setExtensionRequests(result.extensionRequests);
+        console.log("extensionRequests", extensionRequests);
+      }
+    };
+    fetchExtensionRequests();
   }, []);
 
-  const fetchScheduledVivas = async () => {
-    try {
-      const response = await getScheduledVivas();
-      console.log("response is ", response);
-      if (response.success) {
-        setVivas(response.vivas);
-      }
-    } catch (error) {
-      console.error("Error fetching vivas:", error);
-    }
-  };
-
-  const handleUpdateVivaStstus = async (groupId, status) => {
-    const confirmation = window.confirm(
-      `Are you sure you want to mark this viva is completed?`
+  const handleRequest = async (requestId, status) => {
+    const confirm = window.confirm(
+      `Are you sure you want to ${status} this request?`
     );
-    if (confirmation) {
-      const result = await updateVivaStatus(groupId, status);
-      console.log("result ", result);
-      if (result.success) {
-        toast.success("Viva status updated successfully");
-        setVivas((prevVivas) =>
-          prevVivas.map((viva) =>
-            viva.group._id === groupId ? { ...viva, status } : viva
-          )
-        );
-      } else {
-        toast.error("Failed to update viva status");
-      }
+
+    if (!confirm) return;
+
+    const result = await handleExtensionRequest(requestId, status);
+    console.log("result is ", result);
+
+    if (result.success) {
+      setExtensionRequests((prev) =>
+        prev.filter((req) => req._id !== requestId)
+      );
     }
   };
 
-  // Get the current date and set the min value for the input
-  const getCurrentDateTime = () => {
-    const current = new Date();
-    const year = current.getFullYear();
-    const month = (current.getMonth() + 1).toString().padStart(2, "0");
-    const day = current.getDate().toString().padStart(2, "0");
-    const hours = current.getHours().toString().padStart(2, "0");
-    const minutes = current.getMinutes().toString().padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
+  const filteredRequests = extensionRequests.filter((request) => {
+    const lowerQuery = searchQuery.toLowerCase().trim();
+    return (
+      request?.group?.supervisor?.name
+        ?.toString()
+        .includes(lowerQuery.toLowerCase()) ||
+      request?.group?.title?.toString().includes(lowerQuery.toLowerCase())
+    );
+  });
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-semibold text-center mb-6 text-gray-800">
-        Scheduled Viva
+        Extension Requests
       </h1>
 
       {/* Search Bar */}
@@ -84,77 +75,55 @@ export default function ScheduledVivas() {
               <th className="py-3 px-6 text-left">#</th>
               <th className="py-3 px-6 text-left">Group Title</th>
               <th className="py-3 px-6 text-left">Supervisor</th>
+              <th className="py-3 px-6 text-center">Reason</th>
               <th className="py-3 px-6 text-center">Group Details</th>
-              <th className="py-3 px-6 text-center">Viva Details</th>
-              <th className="py-3 px-6 text-center">Viva Status</th>
               <th className="py-3 px-6 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {vivas.length > 0 ? (
-              vivas.map((viva, index) => (
-                <tr
-                  key={viva._id || index}
-                  className={`border-b cursor-pointer hover:bg-slate-100 ${
-                    index % 2 === 0 ? "bg-gray-100" : "bg-white"
-                  }`}
-                >
-                  <td className="py-3 px-6 text-center">{index + 1}</td>
-                  <td className="py-3 px-6">{viva.group.title || "-"}</td>
-                  <td className="py-3 px-6">
-                    {viva.group.supervisor.name || "-"}
-                  </td>
-                  <td className="py-3 px-6 text-center">
-                    <button
-                      onClick={() => {
-                        setGroupDetailsModal(true);
-                        setSelectedGroup(viva.group);
-                      }}
-                      className="text-blue-600 underline"
-                    >
-                      Group Details
-                    </button>
-                  </td>
-                  <td className="py-3 px-6 text-center">
-                    <button
-                      onClick={() => {
-                        setShowVivaModal(true);
-                        setVivaDetail(viva);
-                      }}
-                      className="text-blue-600 underline"
-                    >
-                      Viva Details
-                    </button>
-                  </td>
-                  <td className="py-3 px-6 text-center">
-                    {viva.status === "pending" ? (
-                      <span className="text-yellow-500 font-semibold">
-                        Pending
-                      </span>
-                    ) : (
-                      <span className="text-green-500 font-semibold">
-                        Completed
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 px-6 text-center">
-                    {viva.status === "pending" ? (
+            {filteredRequests.length > 0 ? (
+              filteredRequests
+                .filter((request) => request.status.toLowerCase() === "pending")
+                .map((request, index) => (
+                  <tr
+                    key={request._id || index}
+                    className={`border-b cursor-pointer hover:bg-slate-100 ${
+                      index % 2 === 0 ? "bg-gray-100" : "bg-white"
+                    }`}
+                  >
+                    <td className="py-3 px-6 text-center">{index + 1}</td>
+                    <td className="py-3 px-6">{request.group.title || "-"}</td>
+                    <td className="py-3 px-6">
+                      {request.group.supervisor.name || "-"}
+                    </td>
+                    <td className="py-3 px-6">{request.reason || "-"}</td>
+                    <td className="py-3 px-6 text-center">
                       <button
-                        onClick={() =>
-                          handleUpdateVivaStstus(viva.group._id, "completed")
-                        }
-                        className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600"
+                        onClick={() => {
+                          setGroupDetailsModal(true);
+                          setSelectedGroup(request.group);
+                        }}
+                        className="text-blue-600 underline"
                       >
-                        Mark Viva Completed
+                        Group Details
                       </button>
-                    ) : (
-                      <span className="text-green-500 font-semibold">
-                        Completed
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))
+                    </td>
+                    <td className="py-3 px-6 text-center space-x-1">
+                      <button
+                        onClick={() => handleRequest(request._id, "Approved")}
+                        className="text-green-600 border border-green-600 hover:bg-green-600 hover:text-white py-1 px-3 transition-colors duration-200 rounded"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleRequest(request._id, "Rejected")}
+                        className="text-red-600 border border-red-600 hover:bg-red-600 hover:text-white py-1 px-3 transition-colors duration-200 rounded"
+                      >
+                        Reject
+                      </button>
+                    </td>
+                  </tr>
+                ))
             ) : (
               <tr>
                 <td
@@ -168,90 +137,6 @@ export default function ScheduledVivas() {
           </tbody>
         </table>
       </div>
-
-      {/* Group Details Modal (If needed) */}
-      {groupDetailsModal && selectedGroup && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-2xl p-6 relative">
-            <h2 className="text-xl font-semibold mb-4 text-center">
-              Group Details: {selectedGroup.title}
-            </h2>
-            {/* Add your group details UI here */}
-            <button
-              onClick={() => setGroupDetailsModal(false)}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Viva Detail Modal */}
-      {showVivaModal && vivaDetail && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-            <div className="flex flex-col gap-8 px-4 md:px-10">
-              {/* Header */}
-              <h2 className="text-2xl font-semibold text-gray-800 border-b pb-3 text-center">
-                Scheduled Viva Details
-              </h2>
-
-              {/* Group Info */}
-              <div className="space-y-2 text-gray-700">
-                <p>
-                  <strong>Group Title:</strong>{" "}
-                  <span className="text-blue-600">
-                    {vivaDetail.group?.title || "N/A"}
-                  </span>
-                </p>
-                <p>
-                  <strong>Supervisor:</strong>{" "}
-                  {vivaDetail.group.supervisor.name || "N/A"}
-                </p>
-              </div>
-
-              {/* External Info */}
-              <div className="space-y-2 text-gray-700">
-                <h3 className="text-xl font-semibold text-gray-800 mb-2 border-b pb-2">
-                  External Examiner
-                </h3>
-                <p>
-                  <strong>Name:</strong>{" "}
-                  <span className="text-blue-600">
-                    {vivaDetail.external?.name || "N/A"}
-                  </span>
-                </p>
-                <p>
-                  <strong>Email:</strong> {vivaDetail.external?.email || "N/A"}
-                </p>
-                <p>
-                  <strong>Phone:</strong> {vivaDetail.external?.phone || "N/A"}
-                </p>
-              </div>
-
-              {/* Viva Timing */}
-              <div className="space-y-2 text-gray-700">
-                <h3 className="text-xl font-semibold text-gray-800 mb-2 border-b pb-2">
-                  Viva Schedule
-                </h3>
-                <p>
-                  <strong>Date & Time:</strong>{" "}
-                  {new Date(vivaDetail.dateTime).toLocaleString()}
-                </p>
-              </div>
-
-              {/* Close Button */}
-              <button
-                className="mt-6 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full"
-                onClick={() => setShowVivaModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Group Detail Modal */}
       {groupDetailsModal && selectedGroup && (

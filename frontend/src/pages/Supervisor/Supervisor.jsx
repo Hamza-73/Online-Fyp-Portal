@@ -13,6 +13,7 @@ import Loading from "../Loading";
 import Dashboard from "../Dashboard";
 import ScheduleViva from "./ScheduleViva";
 import ScheduledVivas from "./ScheduledVivas";
+import ExtensionRequests from "./ExtensionRequests";
 
 export default function Supervisor() {
   const { getProfile, currentUser, setCurrentUser } =
@@ -194,6 +195,19 @@ export default function Supervisor() {
             element={
               currentUser ? (
                 <ScheduledVivas
+                  currentUser={currentUser}
+                  setCurrentUser={setCurrentUser}
+                />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/extension-requests"
+            element={
+              currentUser ? (
+                <ExtensionRequests
                   currentUser={currentUser}
                   setCurrentUser={setCurrentUser}
                 />

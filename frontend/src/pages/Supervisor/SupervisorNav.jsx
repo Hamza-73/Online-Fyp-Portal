@@ -120,14 +120,26 @@ const SuperviorNav = ({
             <FaUserShield className="text-orange-600" /> Groups Under Me
           </Link>
           {currentUser && currentUser.isCommittee && (
-            <Link
-              to="/supervisor/schedule-viva"
-              className={`p-2 text-lg flex items-center gap-2 ${
-                pathName.includes("/supervisor/schedule-viva") && "bg-gray-200"
-              } hover:bg-gray-200`}
-            >
-              <FaClock className="text-red-600" /> Schedule Viva
-            </Link>
+            <>
+              <Link
+                to="/supervisor/schedule-viva"
+                className={`p-2 text-lg flex items-center gap-2 ${
+                  pathName.includes("/supervisor/schedule-viva") &&
+                  "bg-gray-200"
+                } hover:bg-gray-200`}
+              >
+                <FaClock className="text-red-600" /> Schedule Viva
+              </Link>
+              <Link
+                to="/supervisor/extension-requests"
+                className={`p-2 text-lg flex items-center gap-2 ${
+                  pathName.includes("/supervisor/extension-requests") &&
+                  "bg-gray-200"
+                } hover:bg-gray-200`}
+              >
+                <FaClock className="text-red-600" /> Extension Requests
+              </Link>
+            </>
           )}
 
           <Link

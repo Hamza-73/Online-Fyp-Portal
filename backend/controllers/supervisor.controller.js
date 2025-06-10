@@ -9,6 +9,8 @@ const Deadline = require("../models/deadline.model.js");
 const Announcement = require("../models/announcement.model.js");
 const XLSX = require("xlsx");
 const Viva = require("../models/viva.model.js");
+const ExtensionRequest = require("../models/extension.model.js");
+const mongoose = require("mongoose");
 
 module.exports.getSupervisors = async (req, res) => {
   try {
@@ -500,6 +502,11 @@ module.exports.acceptRequest = async (req, res) => {
       student.group = existingGroup._id;
       student.isGroupMember = true;
       project.status = "accepted";
+
+      student.notifications.unseen.push({
+        type: "Important",
+        message: `${supervisor.name} accepted your request for group ${project.title}`,
+      });
 
       await Promise.all([existingGroup.save(), project.save(), student.save()]);
       supervisor.notifications.unseen.push({
@@ -1075,6 +1082,105 @@ module.exports.getVivas = async (req, res) => {
     return res.status(200).json({ success: true, vivas });
   } catch (error) {
     console.error("Error fetching vivas:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+module.exports.getExtensionRequests = async (req, res) => {
+  try {
+    const supervisor = await Supervisor.findById(req.user.id);
+
+    if (!supervisor || !supervisor.isCommittee) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const extensionRequests = await ExtensionRequest.find({}).populate({
+      path: "group",
+      populate: {
+        path: "students supervisor",
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Extension Requests Fetched!",
+      extensionRequests,
+    });
+  } catch (error) {
+    console.error("Error fetching extension requests:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+module.exports.handleExtensionRequest = async (req, res) => {
+  try {
+    const { requestId, status } = req.params;
+
+    //chcek if the requeting supervisor is committee member or not
+    const committeeMember = await Supervisor.findById(req.user.id);
+    if (!committeeMember || !committeeMember.isCommittee) {
+      return res.status(401).json({
+        sccess: false,
+        message: "Unauhtorized",
+      });
+    }
+
+    // Convert requestId to ObjectId
+    const objectId = new mongoose.Types.ObjectId(requestId);
+
+    const extensionRequest = await ExtensionRequest.findById(objectId).populate(
+      {
+        path: "group",
+        populate: {
+          path: "students supervisor",
+        },
+      }
+    );
+
+    if (!extensionRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Request not found",
+      });
+    }
+
+    extensionRequest.status = status;
+    await extensionRequest.save();
+
+    // Notify students
+    await Promise.all(
+      extensionRequest.group.students.map(async (student) => {
+        student.notifications.unseen.push({
+          type: "Important",
+          message: `Your extension request was ${status}`,
+        });
+        await student.save();
+      })
+    );
+
+    // Notify the supervisor
+    const supervisor = extensionRequest.group.supervisor;
+    if (supervisor) {
+      supervisor.notifications.unseen.push({
+        type: "Important",
+        message: `Extension request for your group "${extensionRequest.group.title}" was ${status}`,
+      });
+      await supervisor.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Extension request ${status} successfully`,
+    });
+  } catch (error) {
+    console.error("Error handling extension request:", error);
     return res
       .status(500)
       .json({ success: false, message: "Internal Server Error" });

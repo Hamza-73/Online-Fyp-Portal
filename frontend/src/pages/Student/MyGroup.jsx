@@ -8,6 +8,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
     uploadDocument,
     uploadProjectSubmission,
     requestMeeting,
+    requestExtension,
   } = useContext(StudentContext);
 
   const [myGroup, setMyGroup] = useState(null);
@@ -24,6 +25,8 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
   const [viewSubmissionsModal, setViewSubmissionsModal] = useState(false);
   const [showVivaModal, setShowVivaModal] = useState(false);
   const [marksModal, setMarksModal] = useState(false);
+  const [extensionModal, setExtesnionModal] = useState(false);
+  const [extensionReason, setExtensionReason] = useState("");
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -50,13 +53,15 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
   const closeModal = () => {
     setStudentModal(null);
     setProjectModalData(null);
-    setUploadModal(false); // Close Upload Modal
+    setUploadModal(false);
     setWebLink(null);
     setWebLinkError(null);
     setFile(null);
     setSubmissionModal(false);
     setShowVivaModal(false);
     setMarksModal(false);
+    setExtesnionModal(false);
+    setExtensionReason("");
   };
 
   const handleUploadDocument = async (e) => {
@@ -204,8 +209,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
     if (!confirmed) return; // Exit if the user cancels
 
     try {
-      // Optionally show loading state or disable button
-      const result = await requestMeeting();
+      const result = await requestExtension();
 
       if (result.success) {
         toast.success(result.message);
@@ -218,7 +222,28 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
       }
     } catch (error) {
       console.error(error);
-      toast.error("Something went wrong");
+      toast.error("Something went wrong try again");
+    }
+  };
+
+  const handleRequestExtension = async (e, extensionReason) => {
+    e.preventDefault();
+    try {
+      const result = await requestExtension(extensionReason);
+      console.log("result is ", result);
+
+      if (result.success) {
+        toast.success(result.message);
+        setCurrentUser((prevUser) => ({
+          ...prevUser,
+          notifications: result.notifications,
+        }));
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong try again");
     }
   };
 
@@ -328,7 +353,10 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
                       >
                         Request Meeting
                       </button>
-                      <button className="w-full bg-gray-700 text-white px-6 py-3 rounded-md hover:bg-gray-800 transition duration-200">
+                      <button
+                        className="w-full bg-gray-700 text-white px-6 py-3 rounded-md hover:bg-gray-800 transition duration-200"
+                        onClick={() => setExtesnionModal(true)}
+                      >
                         Extension Request
                       </button>
                       <button
@@ -814,7 +842,7 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
             <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4">
               <div className="bg-white p-6 rounded-2xl shadow-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] max-h-[80vh] overflow-y-auto relative">
                 <h2 className="text-2xl font-bold text-center text-gray-800 border-b pb-4 mb-6">
-                  Viva Marks
+                  Request Extension
                 </h2>
 
                 <div className="space-y-4 text-gray-700 text-base">
@@ -849,6 +877,48 @@ export default function MyGroup({ currentUser, setCurrentUser }) {
                 >
                   Close
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Extension Modal */}
+          {extensionModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-4">
+              <div className="bg-white p-6 rounded-2xl shadow-2xl w-[90%] sm:w-[70%] md:w-[50%] lg:w-[40%] max-h-[80vh] overflow-y-auto relative">
+                <h2 className="text-2xl font-bold text-center text-gray-800 border-b pb-4 mb-6">
+                  Reason for Extension
+                </h2>
+
+                <form
+                  className="space-y-4 text-gray-700 text-base"
+                  onSubmit={(e)=>handleRequestExtension(e,extensionReason)}
+                >
+                  <textarea
+                    type="extensionReason"
+                    placeholder="Reason"
+                    value={extensionReason}
+                    onChange={(e) => {
+                      console.log("")
+                      setExtensionReason(e.target.value)
+                      console.log(extensionReason)
+                    }
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!extensionReason}
+                    className="w-full py-3 rounded-md font-medium transition bg-gray-700 text-white "
+                  >
+                    Submit
+                  </button>
+                  <button
+                    onClick={closeModal}
+                    className="mt-8 px-5 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 w-full transition"
+                  >
+                    Close
+                  </button>
+                </form>
               </div>
             </div>
           )}

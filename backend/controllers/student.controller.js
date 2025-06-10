@@ -8,6 +8,8 @@ const Group = require("../models/group.model.js");
 const XLSX = require("xlsx");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
+const ExtensionRequest = require("../models/extension.model.js");
+const Deadline = require("../models/deadline.model.js");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -1042,6 +1044,85 @@ module.exports.requestMeeting = async (req, res) => {
     });
   } catch (error) {
     console.error("Error sending meeting request", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+module.exports.requestExtension = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { reason } = req.body;
+
+    const student = await Student.findById(userId).populate("group");
+
+    if (!student || !student.group) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student or group not found" });
+    }
+
+    const deadlines = await Deadline.find({});
+    if (deadlines && !deadlines.documentation) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "You cannot send extension request untill the documentation deadline is not announced",
+      });
+    }
+
+    const extensionExist = await ExtensionRequest.findOne({
+      group: student.group._id,
+    });
+
+    if (extensionExist && extensionExist?.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: "An extension request has already been submitted.",
+      });
+    }
+
+    const extensionRequest = new ExtensionRequest({
+      group: student.group._id,
+      reason: reason || "",
+    });
+
+    // Notify all students in the group
+    await Promise.all(
+      student.group.students.map(async (stuId) => {
+        const s = await Student.findById(stuId);
+        if (s) {
+          s.notifications.unseen.push({
+            type: "Reminder",
+            message: `${student.name} requested an extension.`,
+          });
+          await s.save();
+        }
+      })
+    );
+
+    // Notify the supervisor
+    const supervisor = await Supervisor.findById(student.group.supervisor);
+    if (supervisor) {
+      supervisor.notifications.unseen.push({
+        type: "Important",
+        message: `${student.name} requested an extension for group "${student.group.title}"`,
+      });
+      await supervisor.save();
+    }
+
+    await extensionRequest.save();
+
+    const updatedStudent = await Student.findById(userId);
+
+    return res.status(201).json({
+      success: true,
+      message: "Extension request submitted successfully.",
+      notifications: updatedStudent.notifications,
+    });
+  } catch (error) {
+    console.error("Error sending extension request", error);
     return res
       .status(500)
       .json({ success: false, message: "Internal Server Error" });

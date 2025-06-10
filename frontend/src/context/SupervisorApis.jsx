@@ -284,6 +284,44 @@ export function SupervisorApis({ children }) {
     }
   };
 
+  const getExtensionRequests = async () => {
+    try {
+      const response = await fetch(
+        `${server}/supervisor/get-extension-requests`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const result = response.json();
+      return result;
+    } catch (error) {
+      console.log("error in getting extension requests ", error);
+    }
+  };
+
+  const handleExtensionRequest = async (requestId, status) => {
+    try {
+      const response = await fetch(
+        `${server}/supervisor/handle-extension-request/${requestId}/${status}`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const result = response.json();
+      return result;
+    } catch (error) {
+      console.log("error in handling extension requests ", error);
+    }
+  };
+
   return (
     <SupervisorContext.Provider
       value={{
@@ -305,6 +343,8 @@ export function SupervisorApis({ children }) {
         getScheduledVivas,
         updateVivaStatus,
         uploadMarks,
+        getExtensionRequests,
+        handleExtensionRequest,
       }}
     >
       {children}

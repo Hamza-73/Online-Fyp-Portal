@@ -18,6 +18,8 @@ const {
   getVivas,
   updateVivaStatus,
   uploadMarks,
+  getExtensionRequests,
+  handleExtensionRequest,
 } = require("../controllers/supervisor.controller");
 const router = express.Router();
 
@@ -45,7 +47,12 @@ router.post(
   authenticateToken,
   updateVivaStatus
 );
-
 router.post("/upload-marks", authenticateToken, uploadMarks);
+router.get("/get-extension-requests", authenticateToken, getExtensionRequests);
+router.post(
+  "/handle-extension-request/:requestId/:status",
+  authenticateToken,
+  handleExtensionRequest
+);
 
 module.exports = router;

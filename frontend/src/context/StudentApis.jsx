@@ -208,6 +208,24 @@ export function StudentApis({ children }) {
     }
   };
 
+  const requestExtension = async (reason) => {
+    try {
+      const response = await fetch(`${server}/student/request-extension`, {
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify(reason),
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error requesting extension :", error);
+      return {
+        success: false,
+        message: "error requesting extension try again!",
+      };
+    }
+  };
+
   return (
     <StudentContext.Provider
       value={{
@@ -225,6 +243,7 @@ export function StudentApis({ children }) {
         uploadDocument,
         uploadProjectSubmission,
         requestMeeting,
+        requestExtension,
       }}
     >
       {children}
