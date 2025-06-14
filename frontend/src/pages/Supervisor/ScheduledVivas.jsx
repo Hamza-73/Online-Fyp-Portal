@@ -146,6 +146,7 @@ export default function ScheduledVivas() {
                         className="bg-blue-500 text-white p-1 rounded hover:bg-blue-600"
                       >
                         Mark Viva Completed
+                        
                       </button>
                     ) : (
                       <span className="text-green-500 font-semibold">
